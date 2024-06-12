@@ -1,0 +1,338 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                        Int        @id @default(autoincrement())
+  name                      String
+  surname                   String
+  birthday                  DateTime?
+  password                  String
+  photo                     String?
+  created_at                DateTime   @default(now())
+  sexe                      String?
+  email                     String     @unique
+  phone                     String?
+  description               String?
+  id_ecole                  Int?       // Référence vers l'école à laquelle l'utilisateur appartient
+  school                    Schools?   @relation(fields: [id_ecole], references: [id])
+  role     Role     @relation(fields: [roleId], references: [id])
+  roleId                  Int
+  teacher                   Teacher?
+  learner                   Learner?
+  reset_password_token      String?    @unique
+  reset_password_expires    DateTime?
+  validate_account_token    String?    @unique
+  validate_account_expires  DateTime?
+  specialisation             Specialisation[]
+  diplomes    Diplome[]
+  langages    Langage[]
+  levelEducationId  Int?
+  levelEducation LevelEducation? @relation(fields: [levelEducationId], references: [id])
+  addresseId   Address?
+  statut           Statut? @relation(fields: [statutId], references: [id])
+  statutId Int?
+}
+
+model Address {
+  id           Int      @id @default(autoincrement())
+  street       String
+  city         String
+  state        String
+  postal_code  String
+  country      String
+  userId       Int   @unique  // Clé étrangère optionnelle pour référencer l'utilisateur propriétaire
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model Teacher  {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  experience Int?
+  user       User     @relation(fields: [userId], references: [id])
+  salaire    Float?
+  est_membre Boolean  @default(false)
+  classes   TeacherClasse[]
+  notes     Note[]
+  typeTeacher   TypeTeacher? @relation(fields: [typeTeacherId], references: [id])
+  typeTeacherId Int?
+  syllabus Syllabus[]
+}
+
+model Learner {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  user       User     @relation(fields: [userId], references: [id])
+  est_membre Boolean  @default(false)
+  classe    Classe? @relation(fields: [classeId], references: [id])   // Un apprenant appartient à une seule classe
+  classeId  Int
+  notes     Note[]
+  learnerAnswer LearnerAnswer[]
+  conceptAutoAssessment ConceptAutoAssessment[]
+  sessionAutoAssessment SessionAutoAssessment[]
+}
+
+model Note {
+  id            Int         @id @default(autoincrement())
+  score         Float       // Note de l'apprenant pour un enseignant
+  learner       Learner? @relation(fields: [learnerId], references: [id])   // Une note est associée à un seul apprenant
+  learnerId     Int         // Clé étrangère vers l'apprenant dans la table Learner
+  teacher       Teacher? @relation(fields: [teacherId], references: [id])     // Une note est enregistrée par un seul enseignant
+  teacherId     Int         // Clé étrangère vers l'enseignant dans la table Teacher
+}
+
+model TypeSchools {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  schools       Schools[]
+}
+
+model Schools {
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  telephone    String?
+  typeSchools  TypeSchools   @relation(fields: [typeSchoolId], references: [id])
+  typeSchoolId Int
+  users        User[]        // Relation avec les utilisateurs (personnes)
+  classes      Classe[]      // Relation avec les classes
+}
+
+model Classe {
+  id          Int       @id @default(autoincrement())
+  name         String
+  ecole       Schools   @relation(fields: [ecoleId], references: [id])
+  ecoleId     Int
+  teachers   TeacherClasse[]
+  learners  Learner[]
+}
+
+model TeacherClasse {
+  teacherId Int
+  classeId  Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  classe    Classe  @relation(fields: [classeId], references: [id])
+
+  @@id([teacherId, classeId])
+}
+
+model Specialisation {
+  id            Int          @id @default(autoincrement())
+  name          String
+  description   String?
+  teachers      User[]    // Relation avec les enseignants
+}
+
+model Diplome {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  users       User[]   // Relation avec les utilisateurs possédant ce diplôme
+}
+
+model LevelEducation {
+  id          Int       @id @default(autoincrement())
+  name        String    // Nom du niveau d'éducation
+  users       User[]
+}
+
+model Langage {
+  id          Int       @id @default(autoincrement())
+  name        String
+  user       User[]
+}
+
+model TypeTeacher {
+  id          Int           @id @default(autoincrement())
+  name        String        // Nom du type d'enseignant
+
+  teachers Teacher[]
+}
+
+model Statut {
+  id          Int           @id @default(autoincrement())
+  name        String        // Nom du statut
+  role        Role          @relation(fields: [roleId], references: [id])
+  roleId      Int
+  user  User[]   // Un statut est associé à un seul enseignant
+}
+
+model Role {
+  id        Int       @id @default(autoincrement())
+  name      String
+  status    Statut[]
+  user User[]
+}
+
+model Syllabus {
+  id                   Int       @id @default(autoincrement())
+  teacher       Teacher? @relation(fields: [teacherId], references: [id])     // Une note est enregistrée par un seul enseignant
+  teacherId     Int
+  link          String?    @unique
+  name                 String @unique
+  nbhr                 Int
+  semestre             String?
+  creditCoef           Int?
+  year                 Int?
+  description_cours    String
+  objectif_general     String?
+  objectif_specifique  String?
+  methodes_pedagogiques MethodesPedagogiques? @relation(fields: [methodeId], references: [id])
+  supports_pedagogiques SupportsPedagogiques? @relation(fields: [supportId], references: [id])
+  mode_evaluation      ModeEvaluation? @relation(fields: [modeId], references: [id])
+  methodeId Int?
+  supportId Int?
+  modeId Int?
+  session Session[]
+}
+
+
+
+model MethodesPedagogiques {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  syllabuses  Syllabus[]
+}
+
+model SupportsPedagogiques {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  syllabuses  Syllabus[]
+}
+
+model ModeEvaluation {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  syllabuses  Syllabus[]
+}
+
+model Session {
+  id        Int      @id @default(autoincrement())
+  syllabus  Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
+  syllabusId Int
+  name      String  @unique
+  startDate DateTime
+  endDate   DateTime
+  sessionAutoAssessment SessionAutoAssessment[]
+  quizzes Quiz[]
+}
+
+// model Concept {
+//   id               Int               @id @default(autoincrement())
+//   name             String
+//   quizzes          Quiz?
+//   conceptAutoAssessment ConceptAutoAssessment[]
+//   sessionId Int
+//   session   Session  @relation(fields: [sessionId], references: [id])
+// }
+
+model Quiz {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  questions Question[]
+  learnerAnswer LearnerAnswer[]
+  conceptAutoAssessment ConceptAutoAssessment[]
+  sessionAutoAssessment SessionAutoAssessment[]
+  isActive Boolean @default(true)
+  sessionId Int
+  session   Session  @relation(fields: [sessionId], references: [id])
+}
+
+model Question {
+  id             Int          @id @default(autoincrement())
+  libelle        String
+  propositions   Proposition[]
+  answer       Answer[]
+  quizId         Int
+  quiz           Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  learnerAnswer LearnerAnswer[]
+}
+
+model Proposition {
+  id           Int       @id @default(autoincrement())
+  valeur       String
+  numbQuestion  Int
+  questionId   Int
+  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  learnerAnswer  LearnerAnswer[]
+}
+
+model Answer {
+  id           Int       @id @default(autoincrement())
+  questionId   Int
+  question     Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  valeur Int
+}
+
+model LearnerAnswer {
+  id           Int       @id @default(autoincrement())
+  learner         Learner      @relation(fields: [learnerId], references: [id])
+  learnerId       Int
+  quiz         Quiz      @relation(fields: [quizId], references: [id])
+  quizId       Int
+  question     Question  @relation(fields: [questionId], references: [id])
+  questionId   Int
+  proposition       Proposition    @relation(fields: [propositionId], references: [id])
+  propositionId     Int
+}
+
+// model AutoAssessment {
+//   id        Int      @id @default(autoincrement())
+//   mastered  Boolean
+//   sessionId Int
+//   session   Session  @relation(fields: [sessionId], references: [id])
+//   learner         Learner      @relation(fields: [learnerId], references: [id])
+//   learnerId       Int
+//   concept    Concept? @relation(fields: [conceptId], references: [id])
+//   conceptId  Int?
+// }
+
+model ConceptAutoAssessment {
+  id         Int      @id @default(autoincrement())
+  mastered   Boolean
+  learnerId  Int
+  learner    Learner  @relation(fields: [learnerId], references: [id])
+  quizzId  Int
+  quizz    Quiz  @relation(fields: [quizzId], references: [id])
+  criteriaId  Int
+  criteria    Criteria  @relation(fields: [criteriaId], references: [id])
+  noteCritere Float
+
+  @@unique([quizzId, learnerId], name: "unique_concept_assessment")
+}
+
+model Criteria {
+  id         Int      @id @default(autoincrement())
+  name   String
+  conceptAutoAssessment ConceptAutoAssessment[]
+}
+
+model SessionAutoAssessment {
+  id         Int      @id @default(autoincrement())
+  mastered   Boolean
+  learnerId  Int
+  learner    Learner  @relation(fields: [learnerId], references: [id])
+  sessionId  Int
+  session    Session  @relation(fields: [sessionId], references: [id])
+  quizzId  Int
+  quizz    Quiz  @relation(fields: [quizzId], references: [id])
+
+  @@unique([sessionId, learnerId], name: "unique_session_assessment")
+}
+
+// enum ComprehensionLevel {
+//   NOT_UNDERSTOOD
+//   VERY_LITTLE_UNDERSTOOD
+//   LITTLE_UNDERSTOOD
+//   MODERATELY_UNDERSTOOD
+//   WELL_UNDERSTOOD
+//   VERY_WELL_UNDERSTOOD
+//   FULLY_UNDERSTOOD
+// }

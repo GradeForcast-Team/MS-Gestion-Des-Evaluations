@@ -1,0 +1,37 @@
+ {
+  "id": 0,
+  "name": "mathe quizz",
+  "questions": [
+    {
+      "id": 0,
+      "libelle": "sddddfff ?":
+      "propositions": [
+        {
+          "id": 0,
+          "valeur": "dsdsds"
+        },
+        {
+          "id": 1,
+          "valeur": "dsdsdsd"
+        }
+      ]
+    }
+  ]
+}
+
+ la table apprenantProfesseur
+ {
+   "idquizz": 0,
+   "questions": [
+     {
+       "id": 0,
+       "libelle": "sdsdsds ? ",
+       "reponse": [
+         {
+           "id": 0,
+           "valeur": "sdsdsdsd"
+         }
+       ]
+     }
+   ]
+ }

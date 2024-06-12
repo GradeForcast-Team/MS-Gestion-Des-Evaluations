@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Réinitialisation de mot de passe</title>
+  <style>
+    /* Styles CSS */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    }
+    .logo {
+      display: block;
+      margin: 0 auto;
+      width: 200px;
+      height: auto;
+    }
+    .welcome-message {
+      text-align: center;
+      margin-top: 20px;
+      color: #1b1b98;
+    }
+    .user-info {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .user-info b {
+      color: #1b1b98;
+    }
+    .reset-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #1b1b98;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      transition: background-color 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #0d0d6b;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <img class="logo" src="../../logo/logo.jpeg" alt="logo NOTEFORECAST">
+  <h2 class="welcome-message">Félicitation <b>{{name}} {{surname}}🎉🎉</b>,</h2>
+  <p class="user-info">Bienvenue sur <b>NoteForecast</b> , l'application de boost des performances académiques.</p>
+  <p class="user-info">Email : <b>{{email}}</b></p>
+  <div class="reset-link">
+    <p>Bien vouloir cliquer sur le lien ci-dessous pour Completer votre compte:</p>
+    <a href="{{Link}}" class="btn">Completer le compte</a>
+  </div>
+</div>
+
+</body>
+</html>
