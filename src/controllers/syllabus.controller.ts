@@ -45,48 +45,48 @@ export class SyllabusController {
   };
 
 
-  public getSyllabusByLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const link = req.params.link;
-      const syllabus = await this.syllabusService.getSyllabusByLink(link);
-      res.status(200).json(syllabus);
-    } catch (error) {
-      next(error);
-    }
-  };
+  // public getSyllabusByLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const link = req.params.link;
+  //     const syllabus = await this.syllabusService.getSyllabusByLink(link);
+  //     res.status(200).json(syllabus);
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 
 
-  public getSyllabusForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { syllabusId, teacherId } = req.params;
-      const getSyllabusForTeacher = await this.syllabusService.getSyllabusForTeacher(parseInt(syllabusId), parseInt(teacherId));
-      res.status(200).json({ data: getSyllabusForTeacher });
-    } catch (error) {
-      next(error);
-    }
-  };
+  // public getSyllabusForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const { syllabusId, teacherId } = req.params;
+  //     const getSyllabusForTeacher = await this.syllabusService.getSyllabusForTeacher(parseInt(syllabusId), parseInt(teacherId));
+  //     res.status(200).json({ data: getSyllabusForTeacher });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 
   public updateSyllabus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const syllabus: Syllabus = req.body;
       const { syllabusId, teacherId } = req.params;
       // @ts-ignore
-      const updateSyllabusData: Syllabus = await this.syllabusService.updateSyllabusGeneral(parseInt(syllabusId), parseInt(teacherId), syllabus);
-
+      // const updateSyllabusData: Syllabus = await this.syllabusService.updateSyllabusGeneral(parseInt(syllabusId), parseInt(teacherId), syllabus);
+      const updateSyllabusData: Syllabus = await this.syllabusService.updateSyllabus(parseInt(syllabusId), parseInt(teacherId), syllabus);
       res.status(201).json({ data: updateSyllabusData, message: 'updated' });
     } catch (error) {
       next(error);
     }
   };
 
-  public deleteSyllabus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const { syllabusId, teacherId } = req.params;
-      const deleteSyllabus: Syllabus = await this.syllabusService.deleteSyllabus(parseInt(syllabusId), parseInt(teacherId));
+  // public deleteSyllabus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const { syllabusId, teacherId } = req.params;
+  //     const deleteSyllabus: Syllabus = await this.syllabusService.deleteSyllabus(parseInt(syllabusId), parseInt(teacherId));
 
-      res.status(200).json({ data: deleteSyllabus, message: 'deleted' });
-    } catch (error) {
-      next(error);
-    }
-  };
+  //     res.status(200).json({ data: deleteSyllabus, message: 'deleted' });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 }

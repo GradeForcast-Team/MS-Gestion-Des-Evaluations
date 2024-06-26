@@ -9,8 +9,8 @@ export class ConceptAutoAssessmentController {
   public conceptAutoAssessment = Container.get(ConceptAutoAssessmentService);
   public createConceptAutoAssessment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { quizzId, learnerId, criteriaId } = req.body;
-      const createAutoAssessmentData = await this.conceptAutoAssessment.saveConceptAutoAssessment(quizzId, learnerId, criteriaId);
+      const { conceptId, learnerId, criteriaId } = req.body;
+      const createAutoAssessmentData = await this.conceptAutoAssessment.saveConceptAutoAssessment(conceptId, learnerId, criteriaId);
       res.status(201).json({data: createAutoAssessmentData, message: 'created'});
     } catch (error) {
       next(error);

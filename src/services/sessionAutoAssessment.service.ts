@@ -9,6 +9,8 @@ export class SessionAutoAssessmentService {
 
   public prisma = new PrismaClient();
   public quizzService = Container.get(QuizzService);
+  
+  //  passer un qu
   public async saveSesssionAutoAssessmentAndGetScore(createAutoAssessment: CreateAutoAssessmentDTO[], sessionId: number, learnerId: number) {
     // Sauvegarde des auto-évaluations
     await this.prisma.sessionAutoAssessment.createMany({

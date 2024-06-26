@@ -25,15 +25,15 @@ export class CreateSyllabusDto {
 
   @IsString()
   @IsNotEmpty()
-  description_cours: string;
+  courseDescription: string;
 
   @IsString()
   @IsOptional()
-  objectif_general: string;
+  generalObjective: string;
 
   @IsString()
   @IsOptional()
-  objectif_specifique: string;
+  specificObjective: string;
 
   @IsNumber()
   @IsOptional()
@@ -47,8 +47,16 @@ export class CreateSyllabusDto {
   @IsOptional()
   modeId: number;
 
+  @IsNumber()
+  @IsOptional()
+  academicYearId: number;
+
+  @IsNumber()
+  @IsOptional()
+  periodId: number;
+
   @ValidateNested()
   @Type(() => CreateSessionDto)
-  session: CreateSessionDto[];
+  sessions: CreateSessionDto[];
 
 }

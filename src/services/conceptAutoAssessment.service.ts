@@ -9,9 +9,8 @@ import {HttpException} from "@exceptions/HttpException";
 export class ConceptAutoAssessmentService {
 
   public prisma = new PrismaClient();
-  public quizzService = Container.get(QuizzService);
 
-  public async saveConceptAutoAssessment(quizzId, learnerId, critereId) {
+  public async saveConceptAutoAssessment(conceptId, learnerId, critereId) {
     const getNoteFromCriteria = (critereId) => {
       switch (critereId) {
         case 1:
@@ -37,9 +36,9 @@ export class ConceptAutoAssessmentService {
       throw new HttpException(404, 'Learner not found');
     }
 
-    const quiz = await this.prisma.quiz.findUnique({ where: { id: quizzId } });
-    if (!quiz) {
-      throw new HttpException(404, 'Quiz not found');
+    const concept = await this.prisma.concept.findUnique({ where: { id: conceptId } });
+    if (!concept) {
+      throw new HttpException(404, 'Concept not found');
     }
 
     const note = getNoteFromCriteria(critereId);
@@ -48,17 +47,17 @@ export class ConceptAutoAssessmentService {
       data: {
         mastered: mastered,
         learnerId: learnerId,
-        quizzId: quizzId,
+        conceptId: conceptId,
         criteriaId: critereId,
         noteCritere: note
       }})
     return conceptAutoAssessment
   }
 
-  public async getConceptAutoAssessment(quizzId: number, learnerId: number) {
+  public async getConceptAutoAssessment(conceptId: number, learnerId: number) {
     const assessment = await this.prisma.conceptAutoAssessment.findFirst({
       where: {
-          quizzId: quizzId,
+          conceptId: conceptId,
           learnerId: learnerId,
       },
     });

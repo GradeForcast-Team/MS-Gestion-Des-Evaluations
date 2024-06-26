@@ -6,45 +6,40 @@ import { Quiz } from '@interfaces/quizz.interface';
 
 @Service()
 export class QuizzService {
-  private session = new PrismaClient().session;
-  private quizz = new PrismaClient().quiz;
-  private learnerAnswer = new PrismaClient().learnerAnswer;
-  private answer = new PrismaClient().answer;
-  private question = new PrismaClient().question;
+  private prisma = new PrismaClient();
+  private quizz = this.prisma.quiz;
+  private learnerAnswer = this.prisma.learnerAnswer;
+  private answer = this.prisma.answer;
+  private question = this.prisma.question;
+  private concept = this.prisma.concept;
 
-  public async createQuiz(sessionId: number, quiz: CreateQuizDto): Promise<Quiz> {
-    const existingSession = await this.session.findFirst({
-      where: {
-        id: sessionId,
-      },
-    });
+  public async createQuiz(conceptId: number, quizData: CreateQuizDto): Promise<Quiz> {
+    const existingConcept = await this.concept.findFirst({ where: { id: conceptId } });
 
-    if (!existingSession) {
-      throw new HttpException(409, 'Session not exists');
+    if (!existingConcept) {
+      throw new HttpException(409, 'Concept not exists');
     }
 
     const createQuizz = await this.quizz.create({
       data: {
-        ...quiz,
-        session: {
-          connect: {
-            id: sessionId,
-          },
-        },
+        ...quizData,
+        concept: { connect: { id: conceptId } },
         questions: {
-          create: quiz.questions.map(question => ({
-            ...question,
-            propositions: {
-              create: question.propositions.map(proposition => ({
-                ...proposition,
-              })),
-            },
-            answer: {
-              create: question.answer.map(answer => ({
-                ...answer,
-              })),
-            },
-          })),
+          create: quizData.questions.map(question => {
+            let count = 1;
+            return {
+              ...question,
+              propositions: {
+                create: question.propositions.map(proposition => ({
+                  numbQuestion: count++,
+                  ...proposition,
+                })),
+              },
+              answer: {
+                create: question.answer.map(answer => ({ ...answer })),
+              },
+            };
+          }),
         },
       },
       include: {
@@ -60,42 +55,9 @@ export class QuizzService {
     return createQuizz;
   }
 
-  public async getAllQuizzForSession(sessionId: number): Promise<Quiz[]> {
+  public async getAllQuizzForConcept(conceptId: number): Promise<Quiz[]> {
     const quizzes = await this.quizz.findMany({
-      where: {
-        sessionId,
-      },
-      include: {
-            questions: {
-              include: {
-                propositions: true,
-                answer: true,
-              },
-            },
-          },
-    });
-    if (!quizzes) {
-      throw new HttpException(404, 'quizzes not found');
-    }
-    return quizzes;
-  }
-
-  public async getQuizzById(sessionId: number, id: number): Promise<Quiz> {
-    const existingSession = await this.session.findFirst({
-      where: {
-        id: sessionId,
-      },
-    });
-
-    if (!existingSession) {
-      throw new HttpException(409, 'Session not exists');
-    }
-
-    const quizz = await this.quizz.findFirst({
-      where: {
-        id,
-        sessionId,
-      },
+      where: { conceptId },
       include: {
         questions: {
           include: {
@@ -105,80 +67,87 @@ export class QuizzService {
         },
       },
     });
+
+    if (!quizzes) {
+      throw new HttpException(404, 'quizzes not found');
+    }
+    return quizzes;
+  }
+
+  public async getQuizzById(conceptId: number, id: number): Promise<Quiz> {
+    const existingConcept = await this.concept.findFirst({ where: { id: conceptId } });
+
+    if (!existingConcept) {
+      throw new HttpException(409, 'Concept not exists');
+    }
+
+    const quizz = await this.quizz.findFirst({
+      where: { id, conceptId },
+      include: {
+        questions: {
+          include: {
+            propositions: true,
+            answer: true,
+          },
+        },
+      },
+    });
+
     if (!quizz) {
       throw new HttpException(404, 'Quizz not found');
     }
     return quizz;
   }
 
-  public async updateQuizzForSession(sessionId: number, id: number, quizz: any): Promise<Quiz> {
+  public async updateQuizzForConcept(conceptId: number, id: number, quizz: any): Promise<Quiz> {
+    const existingConcept = await this.concept.findFirst({ where: { id: conceptId } });
 
-    const existingSession = await this.session.findFirst({
-      where: {
-        id: sessionId,
-      },
-    });
-
-    if (!existingSession) {
-      throw new HttpException(409, 'Session not exists');
+    if (!existingConcept) {
+      throw new HttpException(409, 'Concept not exists');
     }
 
     const updatedQuizz = await this.quizz.update({
-      where: {
-        id,
-      },
-      data: {
-        ...quizz,
-      },
+      where: { id },
+      data: { ...quizz },
     });
 
     return updatedQuizz;
-
   }
-  public async updateQuiz(sessionId: number, quizId: number, quizData: CreateQuizDto): Promise<Quiz> {
-    const existingSession = await this.session.findFirst({
-      where: {
-        id: sessionId,
-      },
-    });
 
-    if (!existingSession) {
-      throw new HttpException(409, 'Session not exists');
+  public async updateQuiz(conceptId: number, quizId: number, quizData: CreateQuizDto): Promise<Quiz> {
+    const existingConcept = await this.concept.findFirst({ where: { id: conceptId } });
+
+    if (!existingConcept) {
+      throw new HttpException(409, 'Concept not exists');
     }
 
-    const existingQuiz = await this.quizz.findFirst({
-      where: {
-        id: quizId,
-        sessionId: sessionId,
-      },
-    });
+    const existingQuiz = await this.quizz.findFirst({ where: { id: quizId, conceptId } });
 
     if (!existingQuiz) {
       throw new HttpException(409, 'Quiz not exists');
     }
 
-    // Update the quiz and its nested relations
     const updatedQuiz = await this.quizz.update({
-      where: {
-        id: quizId,
-      },
+      where: { id: quizId },
       data: {
         ...quizData,
         questions: {
-          deleteMany: {}, // Delete existing questions to replace them
-          create: quizData.questions.map(question => ({
-            ...question,
-            propositions: {
-              create: question.propositions.map(proposition => ({
-                ...proposition,
-              })),
-            },
-            answer: {
-              create: question.answer.map(answer => ({
-                ...answer,
-              })),
-            },
-          })),
+          deleteMany: {}, 
+          create: quizData.questions.map(question => {
+            let count = 1;
+            return {
+              ...question,
+              propositions: {
+                create: question.propositions.map(proposition => ({
+                  numbQuestion: count++,
+                  ...proposition,
+                })),
+              },
+              answer: {
+                create: question.answer.map(answer => ({ ...answer })),
+              },
+            };
+          }),
         },
       },
       include: {
@@ -194,119 +163,95 @@ export class QuizzService {
     return updatedQuiz;
   }
 
-  async deleteQuizz(id: number): Promise<Quiz | null> {
-    const existingQuizz = await this.quizz.findFirst({
-      where: {
-        id,
-      },
-    });
+  public async deleteQuizz(id: number): Promise<Quiz | null> {
+    const existingQuizz = await this.quizz.findFirst({ where: { id } });
 
     if (!existingQuizz) {
       throw new HttpException(409, 'Quizz not exists');
     }
 
-    return this.quizz.delete({
-      where: {
-        id,
-      },
-    });
+    return this.quizz.delete({ where: { id } });
   }
 
-   async  calculerNoteLearner(learnerId:number, quizId: number) {
-
+  public async calculateLearnerScore(learnerId: number, quizId: number) {
     const learnerAnswers = await this.learnerAnswer.findMany({
-      where: {
-        learnerId: learnerId,
-        quizId: quizId,
-      },
+      where: { learnerId, quizId },
       include: {
-        proposition: {
-          include: {
-            question: true,
-          },
-        },
+        proposition: { include: { question: true } },
       },
     });
 
     let score = 0;
 
-    // Parcourir chaque réponse de l'apprenant
     for (const answer of learnerAnswers) {
-      // Récupérer la réponse attendue pour cette question
-      const correctAnswer = await this.answer.findFirst({
-        where: {
-          questionId: answer.questionId,
-        },
-      });
+      const correctAnswer = await this.answer.findFirst({ where: { questionId: answer.questionId } });
 
-      // Vérifier si la proposition choisie par l'apprenant correspond à la réponse attendue
       if (answer.proposition.numbQuestion === correctAnswer.valeur) {
         score++;
       }
     }
 
-    const totalQuestions = await this.question.count({
-      where: {
-        quizId: quizId,
-      },
-    });
-
-    // Calculer le score en pourcentage
+    const totalQuestions = await this.question.count({ where: { quizId } });
     const scorePercentage = (score / totalQuestions) * 100;
 
-    // Retourner le score de l'apprenant
-    return `${score}/${totalQuestions} (${scorePercentage.toFixed(2)}%)`
-
+    return scorePercentage;
   }
 
-  async  NoteLearner(learnerId:number, quizId: number) {
+  public async calculateConceptAssessment(learnerId: number, conceptId: number) {
+    try {
+      const quizzes = await this.quizz.findMany({ where: { conceptId } });
 
-    const learnerAnswers = await this.learnerAnswer.findMany({
-      where: {
-        learnerId: learnerId,
-        quizId: quizId,
-      },
-      include: {
-        proposition: {
-          include: {
-            question: true,
-          },
-        },
-      },
-    });
-    console.log("learner", learnerAnswers)
-    let score = 0;
-
-    // Parcourir chaque réponse de l'apprenant
-    for (const answer of learnerAnswers) {
-      // Récupérer la réponse attendue pour cette question
-      const correctAnswer = await this.answer.findFirst({
-        where: {
-          questionId: answer.questionId,
-        },
-      });
-
-      // Vérifier si la proposition choisie par l'apprenant correspond à la réponse attendue
-      if (answer.proposition.numbQuestion === correctAnswer.valeur) {
-        score++;
+      if (quizzes.length === 0) {
+        throw new Error('No quizzes found for this concept');
       }
+
+      let totalScore = 0;
+      let totalQuestions = 0;
+
+      for (const quiz of quizzes) {
+        const learnerAnswers = await this.learnerAnswer.findMany({
+          where: { learnerId, quizId: quiz.id },
+          include: {
+            proposition: { include: { question: true } },
+          },
+        });
+
+        if (learnerAnswers.length === 0) {
+          throw new Error(`No answers found for learner ${learnerId} in quiz ${quiz.id}`);
+        }
+
+        const questionIds = learnerAnswers.map(answer => answer.questionId);
+        const correctAnswers = await this.answer.findMany({ where: { questionId: { in: questionIds } } });
+
+        const correctAnswerMap = correctAnswers.reduce((acc, answer) => {
+          acc[answer.questionId] = answer.valeur;
+          return acc;
+        }, {});
+
+        let quizScore = 0;
+        for (const answer of learnerAnswers) {
+          const correctValue = correctAnswerMap[answer.questionId];
+          if (correctValue !== undefined && answer.proposition.numbQuestion === correctValue) {
+            quizScore++;
+          }
+        }
+
+        const quizTotalQuestions = await this.question.count({ where: { quizId: quiz.id } });
+
+        totalScore += quizScore;
+        totalQuestions += quizTotalQuestions;
+        console.log(totalScore,totalQuestions)
+      }
+
+      if (totalQuestions === 0) {
+        throw new Error('No questions found for the concept quizzes');
+      }
+
+      const overallScorePercentage = (totalScore / totalQuestions) * 100;
+      return overallScorePercentage;
+    } catch (error) {
+      console.error('Error calculating concept evaluation score:', error);
+      throw error;
     }
-    console.log('Score', score);
-    const totalQuestions = await this.question.count({
-      where: {
-        quizId: quizId,
-      },
-    });
-
-    // Calculer le score en pourcentage
-    const scorePercentage = (score / totalQuestions);
-
-    // Retourner le score de l'apprenant
-    return scorePercentage
-
   }
-
-
-
-
 }

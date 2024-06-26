@@ -14,6 +14,7 @@ import {LearnerAnswerRoute} from "@routes/learnerAnswer.route";
 import {AutoAssessmentRoute} from "@routes/autoAssessment.route";
 import {ConceptAssessmentRoute} from "@routes/conceptAssessment.route";
 import {AssessmentRoute} from "@routes/assessment.route";
+import { SyllabusClasseRoute } from './routes/syllabusClasse.route';
 
 ValidateEnv();
 
@@ -31,7 +32,8 @@ const app = new App([
   new LearnerAnswerRoute(),
   new AutoAssessmentRoute(),
   new ConceptAssessmentRoute(),
-  new AssessmentRoute()
+  new AssessmentRoute(),
+  new SyllabusClasseRoute()
 ]);
 app.listen();
 

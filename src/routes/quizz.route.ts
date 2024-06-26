@@ -15,11 +15,13 @@ export class QuizzRoute implements Routes {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/create/:id(\\d+)`,this.quizz.createQuizz);
-    this.router.get(`${this.path}/getAllQuizzForSession/:id(\\d+)`, this.quizz.getAllQuizzForSession);
+    this.router.get(`${this.path}/getAllQuizzForConcept/:id(\\d+)`, this.quizz.getAllQuizzForConcept);
     this.router.get(`${this.path}/calculatequizz/:quizzId(\\d+)/learner/:learnerId(\\d+)`, this.quizz.calculerNoteLearner);
-    this.router.get(`${this.path}/getQuizzForSession/:quizzId(\\d+)/session/:sessionId(\\d+)`, this.quizz.getQuizzById);
-    this.router.put(`${this.path}/updateQuizzForSession/:quizzId(\\d+)/session/:sessionId(\\d+)`, this.quizz.updateQuizzForSession);
-    this.router.put(`${this.path}/updateQuizzSpecial/:quizzId(\\d+)/session/:sessionId(\\d+)`, this.quizz.updateQuizzSpecial);
+    // this.router.get(`${this.path}/getQuizzForConcept/:quizzId(\\d+)/concept/:conceptId(\\d+)`, this.quizz.);
+    this.router.put(`${this.path}/updateQuizzForConcept/:quizzId(\\d+)/concept/:conceptId(\\d+)`, this.quizz.updateQuizzForConcept);
+    this.router.put(`${this.path}/updateQuizzSpecial/:quizzId(\\d+)/concept/:conceptId(\\d+)`, this.quizz.updateQuizzForConcept);
     this.router.delete(`${this.path}/deleteQuizz/:id(\\d+)`, this.quizz.deleteQuizz);
+
+    this.router.get(`${this.path}/assessmentConceptLearner/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.quizz.AssessmentConceptLearner);
   }
 }

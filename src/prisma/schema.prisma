@@ -42,6 +42,7 @@ model User {
   statutId Int?
 }
 
+
 model Address {
   id           Int      @id @default(autoincrement())
   street       String
@@ -80,19 +81,13 @@ model Learner {
   sessionAutoAssessment SessionAutoAssessment[]
 }
 
-model Note {
-  id            Int         @id @default(autoincrement())
-  score         Float       // Note de l'apprenant pour un enseignant
-  learner       Learner? @relation(fields: [learnerId], references: [id])   // Une note est associée à un seul apprenant
-  learnerId     Int         // Clé étrangère vers l'apprenant dans la table Learner
-  teacher       Teacher? @relation(fields: [teacherId], references: [id])     // Une note est enregistrée par un seul enseignant
-  teacherId     Int         // Clé étrangère vers l'enseignant dans la table Teacher
-}
+
 
 model TypeSchools {
   id            Int           @id @default(autoincrement())
   name          String        @unique
   schools       Schools[]
+  periode   Periode[]
 }
 
 model Schools {
@@ -112,6 +107,7 @@ model Classe {
   ecoleId     Int
   teachers   TeacherClasse[]
   learners  Learner[]
+  syllabus SyllabusClasse[] 
 }
 
 model TeacherClasse {
@@ -175,27 +171,83 @@ model Syllabus {
   id                   Int       @id @default(autoincrement())
   teacher       Teacher? @relation(fields: [teacherId], references: [id])     // Une note est enregistrée par un seul enseignant
   teacherId     Int
-  link          String?    @unique
   name                 String @unique
   nbhr                 Int
-  semestre             String?
-  creditCoef           Int?
-  year                 Int?
-  description_cours    String
-  objectif_general     String?
-  objectif_specifique  String?
-  methodes_pedagogiques MethodesPedagogiques? @relation(fields: [methodeId], references: [id])
-  supports_pedagogiques SupportsPedagogiques? @relation(fields: [supportId], references: [id])
-  mode_evaluation      ModeEvaluation? @relation(fields: [modeId], references: [id])
+  creditCoef           Float?
+  courseDescription    String
+  generalObjective     String?
+  specificObjective  String?
+  pedagogicalMethod pedagogicalMethod? @relation(fields: [methodeId], references: [id])
+  educationalSupport SupportsPedagogiques? @relation(fields: [supportId], references: [id])
+  evaluationMode      evaluationMode? @relation(fields: [modeId], references: [id])
   methodeId Int?
   supportId Int?
   modeId Int?
   session Session[]
+  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  academicYearId Int
+  notereel Note[]
+  bibliography Bibliography[]
+  periode       Periode? @relation(fields: [periodeId], references: [id])     
+  periodeId     Int
+  classe SyllabusClasse[] 
 }
 
+model SyllabusClasse {
+  syllabus       Syllabus? @relation(fields: [syllabusId], references: [id])     // Une note est enregistrée par un seul enseignant
+  syllabusId     Int
+  classeId  Int
+  classe    Classe  @relation(fields: [classeId], references: [id])
+  linkSyllabusClasse String @unique
+  @@id([syllabusId, classeId])
+}
 
+model Note {
+  id            Int         @id @default(autoincrement())
+  score         Float       // Note de l'apprenant pour un enseignant
+  learner       Learner? @relation(fields: [learnerId], references: [id])   // Une note est associée à un seul apprenant
+  learnerId     Int         // Clé étrangère vers l'apprenant dans la table Learner
+  teacher       Teacher? @relation(fields: [teacherId], references: [id])     // Une note est enregistrée par un seul enseignant
+  teacherId     Int         // Clé étrangère vers l'enseignant dans la table Teacher
+  syllabus       Syllabus? @relation(fields: [syllabusId], references: [id])     // Une note est enregistrée par un seul enseignant
+  syllabusId     Int
+  typeAssessment       TypeAssessment? @relation(fields: [typeAssessmentId], references: [id])     
+  typeAssessmentId     Int
+  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  academicYearId Int
 
-model MethodesPedagogiques {
+}
+model TypeAssessment{
+  id Int           @id @default(autoincrement())
+  Nom               String
+  notereel Note[]
+  periode       Periode? @relation(fields: [periodeId], references: [id])     
+  periodeId     Int
+}
+
+model Periode {
+  id         Int           @id @default(autoincrement())
+  Nom               String
+  typeAssessment TypeAssessment[]
+  typeSchool       TypeSchools? @relation(fields: [typeSchoolId], references: [id])     
+  typeSchoolId     Int
+  syllabus Syllabus[]
+}
+
+model AcademicYear {
+  id        Int       @id @default(autoincrement())
+  startYear Int
+  endYear   Int
+  syllabus Syllabus[]
+  note Note[]
+}
+
+model Bibliography {
+   id        Int       @id @default(autoincrement())
+   libelle String
+   syllabus Syllabus[]
+}
+model pedagogicalMethod {
   id          Int     @id @default(autoincrement())
   name        String  @unique
   syllabuses  Syllabus[]
@@ -207,10 +259,12 @@ model SupportsPedagogiques {
   syllabuses  Syllabus[]
 }
 
-model ModeEvaluation {
+model evaluationMode {
+
   id          Int     @id @default(autoincrement())
   name        String  @unique
   syllabuses  Syllabus[]
+
 }
 
 model Session {
@@ -221,28 +275,27 @@ model Session {
   startDate DateTime
   endDate   DateTime
   sessionAutoAssessment SessionAutoAssessment[]
-  quizzes Quiz[]
+  concept Concept[]
 }
 
-// model Concept {
-//   id               Int               @id @default(autoincrement())
-//   name             String
-//   quizzes          Quiz?
-//   conceptAutoAssessment ConceptAutoAssessment[]
-//   sessionId Int
-//   session   Session  @relation(fields: [sessionId], references: [id])
-// }
+model Concept {
+  id               Int               @id @default(autoincrement())
+  name             String
+  quizzes          Quiz[]
+  conceptAutoAssessment ConceptAutoAssessment[]
+  sessionId Int
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
 
 model Quiz {
   id        Int       @id @default(autoincrement())
   name      String    @unique
   questions Question[]
   learnerAnswer LearnerAnswer[]
-  conceptAutoAssessment ConceptAutoAssessment[]
   sessionAutoAssessment SessionAutoAssessment[]
   isActive Boolean @default(true)
-  sessionId Int
-  session   Session  @relation(fields: [sessionId], references: [id])
+  conceptId Int
+  concept   Concept  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 }
 
 model Question {
@@ -299,13 +352,13 @@ model ConceptAutoAssessment {
   mastered   Boolean
   learnerId  Int
   learner    Learner  @relation(fields: [learnerId], references: [id])
-  quizzId  Int
-  quizz    Quiz  @relation(fields: [quizzId], references: [id])
+  conceptId  Int
+  concept    Concept  @relation(fields: [conceptId], references: [id])
   criteriaId  Int
   criteria    Criteria  @relation(fields: [criteriaId], references: [id])
   noteCritere Float
 
-  @@unique([quizzId, learnerId], name: "unique_concept_assessment")
+  @@unique([conceptId, learnerId], name: "unique_concept_assessment")
 }
 
 model Criteria {

@@ -19,16 +19,16 @@ export class LearnerAnswerService {
       // });
     const reponsesCrees = [];
     for (const answer of learnerAnswer) {
-      const learnerResponse= await this.prisma.learnerAnswer.create({
+      const learnerAnswer= await this.prisma.learnerAnswer.create({
         data: answer,
       });
-      reponsesCrees.push(learnerResponse);
+      reponsesCrees.push(learnerAnswer);
     }
       return reponsesCrees;
   }
 
   async  getLearnerResponseById(learnerResponseId) {
-      const learnerResponse = await this.prisma.learnerAnswer.findUnique({
+      const learnerAnswer = await this.prisma.learnerAnswer.findUnique({
         where: {
           id: learnerResponseId
         },
@@ -39,7 +39,7 @@ export class LearnerAnswerService {
           proposition: true
         }
       });
-      return learnerResponse;
+      return learnerAnswer;
 
   }
 

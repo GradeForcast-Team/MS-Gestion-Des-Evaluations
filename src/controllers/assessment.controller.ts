@@ -7,8 +7,8 @@ export class AssessmentController {
   public assessment = Container.get(AssessmentService);
   public level0Assessment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { quizzId, learnerId } =  req.params;
-      const level0Assessment = await this.assessment.getConceptEvaluation(parseInt(quizzId), parseInt(learnerId));
+      const { conceptId, learnerId } =  req.params;
+      const level0Assessment = await this.assessment.getConceptEvaluation(parseInt(conceptId), parseInt(learnerId));
       res.status(201).json({data: level0Assessment, message: 'created'});
     } catch (error) {
       next(error);
