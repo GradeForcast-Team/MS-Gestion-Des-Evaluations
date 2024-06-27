@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import {ConceptAutoAssessmentController} from "@controllers/conceptAutoAssessment.controller";
 
-export class ConceptAssessmentRoute implements Routes {
+export class ConceptAutoAssessmentRoute implements Routes {
   public path = '/conceptAutoAssessment';
   public router = Router();
   public conceptAutoAssessment = new ConceptAutoAssessmentController();
@@ -12,6 +12,6 @@ export class ConceptAssessmentRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/create`, this.conceptAutoAssessment.createConceptAutoAssessment);
+    this.router.post(`${this.path}/autoAssessmentForOneConcept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.createConceptAutoAssessment);
   }
 }

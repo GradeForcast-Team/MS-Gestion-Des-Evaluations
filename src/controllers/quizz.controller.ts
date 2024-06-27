@@ -81,19 +81,7 @@ export class QuizzController {
 
   }
 
-  public AssessmentConceptLearner = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-
-    try {
-
-      const { learnerId, conceptId } = req.params;
-
-      const scoreAssessmentConcept = await  this.quizzService.calculateConceptAssessment(parseInt(learnerId), parseInt(conceptId));
-      res.status(200).json({ data: scoreAssessmentConcept})
-    } catch (error) {
-      next(error)
-    }
-
-  }
+  
 
   public deleteQuizz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

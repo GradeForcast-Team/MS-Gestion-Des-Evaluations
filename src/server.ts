@@ -12,9 +12,9 @@ import {QuizzRoute} from "@routes/quizz.route";
 import {QuestionRoute} from "@routes/question.route";
 import {LearnerAnswerRoute} from "@routes/learnerAnswer.route";
 import {AutoAssessmentRoute} from "@routes/autoAssessment.route";
-import {ConceptAssessmentRoute} from "@routes/conceptAssessment.route";
 import {AssessmentRoute} from "@routes/assessment.route";
 import { SyllabusClasseRoute } from './routes/syllabusClasse.route';
+import { ConceptAutoAssessmentRoute } from './routes/conceptAutoAssessment.route';
 
 ValidateEnv();
 
@@ -31,7 +31,7 @@ const app = new App([
   new QuestionRoute(),
   new LearnerAnswerRoute(),
   new AutoAssessmentRoute(),
-  new ConceptAssessmentRoute(),
+  new ConceptAutoAssessmentRoute(),
   new AssessmentRoute(),
   new SyllabusClasseRoute()
 ]);

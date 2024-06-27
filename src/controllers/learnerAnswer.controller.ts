@@ -10,8 +10,9 @@ export class LearnerAnswerController {
 
   public createlearnerAnswer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const learnerAnswerData: LearnerAnswer = req.body;
-      const createlearnerAnswerData: LearnerAnswer[] = await this.learnerAnswer.createLearnerResponse(learnerAnswerData);
+      const { quizzId, learnerId } = req.params;
+      const learnerAnswerData: LearnerAnswer[] = req.body;
+      const createlearnerAnswerData: LearnerAnswer[] = await this.learnerAnswer.createLearnerResponse(parseInt(quizzId),parseInt(learnerId), learnerAnswerData);
 
       res.status(201).json({ data: createlearnerAnswerData, message: 'created' });
     } catch (error) {

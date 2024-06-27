@@ -22,6 +22,6 @@ export class QuizzRoute implements Routes {
     this.router.put(`${this.path}/updateQuizzSpecial/:quizzId(\\d+)/concept/:conceptId(\\d+)`, this.quizz.updateQuizzForConcept);
     this.router.delete(`${this.path}/deleteQuizz/:id(\\d+)`, this.quizz.deleteQuizz);
 
-    this.router.get(`${this.path}/assessmentConceptLearner/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.quizz.AssessmentConceptLearner);
+   
   }
 }

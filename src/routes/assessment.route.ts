@@ -13,6 +13,8 @@ export class AssessmentRoute implements Routes {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}/assessmentConceptLearner/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.AssessmentConceptLearner);
     this.router.get(`${this.path}/concept/:quizzId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.level0Assessment);
+
   }
 }

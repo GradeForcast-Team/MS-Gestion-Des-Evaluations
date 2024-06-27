@@ -14,6 +14,6 @@ export class LearnerAnswerRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/create`, this.learnerAnswer.createlearnerAnswer);
+    this.router.post(`${this.path}/create/:quizzId(\\d+)/learner/:learnerId(\\d+)`, this.learnerAnswer.createlearnerAnswer);
   }
 }

@@ -8,24 +8,61 @@ import {LearnerAnswer} from "@interfaces/learnerAnswer.interface";
 export class LearnerAnswerService {
   public prisma = new PrismaClient();
 
-  async createLearnerResponse(learnerAnswer: any): Promise <LearnerAnswer[]> {
-      // const learnerResponse = await this.prisma.learnerAnswer.create({
-      //   data: {
-      //     learnerId : learnerAnswer.learnerId,
-      //     questionId : learnerAnswer.questionId,
-      //     propositionId : learnerAnswer.propositionId,
-      //     quizId : learnerAnswer.quizId
-      //   }
-      // });
-    const reponsesCrees = [];
-    for (const answer of learnerAnswer) {
-      const learnerAnswer= await this.prisma.learnerAnswer.create({
-        data: answer,
-      });
-      reponsesCrees.push(learnerAnswer);
-    }
-      return reponsesCrees;
+
+async  createLearnerResponse(quizzId: number, learnerId: number, learnerAnswers: LearnerAnswer[]): Promise<LearnerAnswer[]> {
+  // Vérifiez si le quiz existe
+  const existingQuizz = await this.prisma.quiz.findFirst({
+    where: {
+      id: quizzId,
+    },
+  });
+
+  if (!existingQuizz) {
+    throw new HttpException(409, 'Quiz does not exist');
   }
+
+
+  // Vérifiez l'existence de chaque question et proposition
+  await Promise.all(learnerAnswers.map(async (learnerAnswer) => {
+    const existingQuestion = await this.prisma.question.findFirst({
+      where: {
+        id: learnerAnswer.questionId,
+      },
+    });
+
+    if (!existingQuestion) {
+      throw new HttpException(409, `Question with id ${learnerAnswer.questionId} does not exist`);
+    }
+
+    const existingProposition = await this.prisma.proposition.findFirst({
+      where: {
+        id: learnerAnswer.propositionId,
+      },
+    });
+
+    if (!existingProposition) {
+      throw new HttpException(409, `Proposition with id ${learnerAnswer.propositionId} does not exist`);
+    }
+  }));
+
+  // Créez les réponses de l'apprenant dans une transaction
+  const reponsesCrees = await this.prisma.$transaction(
+    learnerAnswers.map(answer => 
+      this.prisma.learnerAnswer.create({
+        data: {
+          learnerId: learnerId,
+          quizId: quizzId,
+          questionId: answer.questionId,
+          propositionId: answer.propositionId,
+        },
+      })
+    )
+  );
+
+  return reponsesCrees;
+}
+
+
 
   async  getLearnerResponseById(learnerResponseId) {
       const learnerAnswer = await this.prisma.learnerAnswer.findUnique({
