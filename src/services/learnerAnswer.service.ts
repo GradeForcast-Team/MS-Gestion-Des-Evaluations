@@ -1,7 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { Service } from 'typedi';
 import {HttpException} from "@exceptions/HttpException";
-import {CreateLearnerAnswerDto} from "@dtos/learnerAnswer.dto";
 import {LearnerAnswer} from "@interfaces/learnerAnswer.interface";
 
 @Service()
@@ -9,58 +8,60 @@ export class LearnerAnswerService {
   public prisma = new PrismaClient();
 
 
-async  createLearnerResponse(quizzId: number, learnerId: number, learnerAnswers: LearnerAnswer[]): Promise<LearnerAnswer[]> {
-  // Vérifiez si le quiz existe
-  const existingQuizz = await this.prisma.quiz.findFirst({
-    where: {
-      id: quizzId,
-    },
-  });
-
-  if (!existingQuizz) {
-    throw new HttpException(409, 'Quiz does not exist');
-  }
-
-
-  // Vérifiez l'existence de chaque question et proposition
-  await Promise.all(learnerAnswers.map(async (learnerAnswer) => {
-    const existingQuestion = await this.prisma.question.findFirst({
+  async createLearnerResponse(quizzId: number, learnerId: number, learnerAnswers: LearnerAnswer[]): Promise<LearnerAnswer[]> {
+    // Vérifiez si le quiz existe
+    const existingQuizz = await this.prisma.quiz.findFirst({
       where: {
-        id: learnerAnswer.questionId,
+        id: quizzId,
       },
     });
-
-    if (!existingQuestion) {
-      throw new HttpException(409, `Question with id ${learnerAnswer.questionId} does not exist`);
+  
+    if (!existingQuizz) {
+      throw new HttpException(409, 'Quiz does not exist');
     }
-
-    const existingProposition = await this.prisma.proposition.findFirst({
-      where: {
-        id: learnerAnswer.propositionId,
-      },
-    });
-
-    if (!existingProposition) {
-      throw new HttpException(409, `Proposition with id ${learnerAnswer.propositionId} does not exist`);
-    }
-  }));
-
-  // Créez les réponses de l'apprenant dans une transaction
-  const reponsesCrees = await this.prisma.$transaction(
-    learnerAnswers.map(answer => 
-      this.prisma.learnerAnswer.create({
-        data: {
-          learnerId: learnerId,
-          quizId: quizzId,
-          questionId: answer.questionId,
-          propositionId: answer.propositionId,
+  
+    // Vérifiez l'existence de chaque question et proposition et assurez-vous que chaque question appartient bien au quiz
+    await Promise.all(learnerAnswers.map(async (learnerAnswer) => {
+      const existingQuestion = await this.prisma.question.findFirst({
+        where: {
+          id: learnerAnswer.questionId,
+          quizId: quizzId,  // Assurez-vous que la question appartient bien au quiz
         },
-      })
-    )
-  );
-
-  return reponsesCrees;
-}
+      });
+  
+      if (!existingQuestion) {
+        throw new HttpException(409, `Question with id ${learnerAnswer.questionId} does not exist or does not belong to the specified quiz`);
+      }
+  
+      // const existingProposition = await this.prisma.proposition.findFirst({
+      //   where: {
+      //     id: learnerAnswer.propositionId,
+      //     questionId: learnerAnswer.questionId,  // Assurez-vous que la proposition appartient bien à la question
+      //   },
+      // });
+  
+      // if (!existingProposition) {
+      //   throw new HttpException(409, `Proposition with id ${learnerAnswer.propositionId} does not exist or does not belong to the specified question`);
+      // }
+    }));
+  
+    // Créez les réponses de l'apprenant dans une transaction
+    const reponsesCrees = await this.prisma.$transaction(
+      learnerAnswers.map(answer => 
+        this.prisma.learnerAnswer.create({
+          data: {
+            learnerId: learnerId,
+            quizId: quizzId,
+            questionId: answer.questionId,
+            propositionId: answer.propositionId,
+          },
+        })
+      )
+    );
+  
+    return reponsesCrees;
+  }
+  
 
 
 

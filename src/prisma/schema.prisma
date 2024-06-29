@@ -283,6 +283,7 @@ model Concept {
   name             String
   quizzes          Quiz[]
   conceptAutoAssessment ConceptAutoAssessment[]
+  sessionAutoAssessment SessionAutoAssessment[]
   sessionId Int
   session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
@@ -292,7 +293,6 @@ model Quiz {
   name      String    @unique
   questions Question[]
   learnerAnswer LearnerAnswer[]
-  sessionAutoAssessment SessionAutoAssessment[]
   isActive Boolean @default(true)
   conceptId Int
   concept   Concept  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
@@ -365,18 +365,19 @@ model Criteria {
   id         Int      @id @default(autoincrement())
   name   String
   conceptAutoAssessment ConceptAutoAssessment[]
+  sessionAutoAssessment SessionAutoAssessment[]
 }
 
 model SessionAutoAssessment {
   id         Int      @id @default(autoincrement())
-  mastered   Boolean
   learnerId  Int
   learner    Learner  @relation(fields: [learnerId], references: [id])
   sessionId  Int
   session    Session  @relation(fields: [sessionId], references: [id])
-  quizzId  Int
-  quizz    Quiz  @relation(fields: [quizzId], references: [id])
-
+  conceptId  Int
+  concept    Concept  @relation(fields: [conceptId], references: [id])
+  criteriaId  Int
+  criteria    Criteria  @relation(fields: [criteriaId], references: [id])
   @@unique([sessionId, learnerId], name: "unique_session_assessment")
 }
 

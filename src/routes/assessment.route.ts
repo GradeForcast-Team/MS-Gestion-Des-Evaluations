@@ -13,7 +13,9 @@ export class AssessmentRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/assessmentConceptLearner/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.AssessmentConceptLearner);
+    this.router.get(`${this.path}/assessmentConceptLearner/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.AssessmentConceptLearner);
+    this.router.get(`${this.path}/AssessmentConceptLearnerForSession/:sessionId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.AssessmentConceptLearnerForSession);
+    this.router.get(`${this.path}/getEvaluationDetailForConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.getAssessmentnDetails);
     this.router.get(`${this.path}/concept/:quizzId(\\d+)/learner/:learnerId(\\d+)`, this.autoAssessment.level0Assessment);
 
   }

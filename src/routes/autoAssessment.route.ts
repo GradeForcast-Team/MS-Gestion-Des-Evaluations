@@ -12,8 +12,8 @@ export class AutoAssessmentRoute implements Routes {
   }
 
   private initializeRoutes() {
-    // this.router.post(`${this.path}/create`, this.autoAssessment.createAutoAssessment);
-    // this.router.get(`${this.path}/getAutoEvaluationScoresClasseForTeacher/:id(\\d+)`, this.autoAssessment.getAutoEvaluationScoresClasseForTeacher);
-    // this.router.get(`${this.path}/getAutoEvaluationScoresForLearnersInClass/:id(\\d+)`, this.autoAssessment.getAutoEvaluationScoresForLearnersInClass);
+    this.router.post(`${this.path}/create`, this.autoAssessment.createAutoAssessment);
+    this.router.get(`${this.path}/getAutoEvaluationScoresClasseForTeacher/:id(\\d+)`, this.autoAssessment.getAutoEvaluationScoresClasseForTeacher);
+    this.router.get(`${this.path}/getAutoEvaluationScoresForLearnersInClass/:id(\\d+)`, this.autoAssessment.getAutoEvaluationScoresForLearnersInClass);
   }
 }

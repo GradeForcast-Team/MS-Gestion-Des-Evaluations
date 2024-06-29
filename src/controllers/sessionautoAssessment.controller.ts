@@ -4,7 +4,7 @@ import {SessionAutoAssessmentService} from "@services/sessionAutoAssessment.serv
 import {AutoAssessmentInterface} from "@interfaces/autoAssessment.interface";
 
 export class SessionautoAssessmentController {
-
+  // Auto Evaluation d'une session on fait la somme des concepts
   public autoAssessment = Container.get(SessionAutoAssessmentService);
   public createAutoAssessment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

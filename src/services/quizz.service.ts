@@ -173,6 +173,7 @@ export class QuizzService {
     return this.quizz.delete({ where: { id } });
   }
 
+  // Evaluation d'un quizz
   public async calculateLearnerScore(learnerId: number, quizId: number) {
     const learnerAnswers = await this.learnerAnswer.findMany({
       where: { learnerId, quizId },

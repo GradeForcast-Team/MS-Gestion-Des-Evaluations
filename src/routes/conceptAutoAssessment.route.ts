@@ -12,6 +12,9 @@ export class ConceptAutoAssessmentRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/autoAssessmentForOneConcept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.createConceptAutoAssessment);
+    this.router.post(`${this.path}/autoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.createConceptAutoAssessment);
+    this.router.post(`${this.path}/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.saveSessionAutoAssessment);
+    this.router.get(`${this.path}/getautoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.getConceptAutoAssessmentDetails);
+    this.router.get(`${this.path}/getautoAssessmentForSession/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.getSessionAutoAssessmentDetails);
   }
 }

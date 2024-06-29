@@ -10,5 +10,5 @@ export class CreateConceptDto {
   @IsOptional()
   @ValidateNested()
   @Type(() => CreateQuizDto) // Importez et utilisez le DTO approprié si nécessaire
-  quizz?: CreateQuizDto[];
+  quizzes?: CreateQuizDto[];
 }

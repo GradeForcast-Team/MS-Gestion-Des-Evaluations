@@ -8,7 +8,7 @@ export class CreateAutoAssessmentDTO {
 
   @IsNotEmpty()
   @IsNumber()
-  quizzId: number;
+  conceptId: number;
 
   @IsNotEmpty()
   @IsNumber()
