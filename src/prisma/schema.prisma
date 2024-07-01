@@ -219,7 +219,7 @@ model Note {
 }
 model TypeAssessment{
   id Int           @id @default(autoincrement())
-  Nom               String
+  name               String
   notereel Note[]
   periode       Periode? @relation(fields: [periodeId], references: [id])     
   periodeId     Int
@@ -227,7 +227,7 @@ model TypeAssessment{
 
 model Periode {
   id         Int           @id @default(autoincrement())
-  Nom               String
+  name               String
   typeAssessment TypeAssessment[]
   typeSchool       TypeSchools? @relation(fields: [typeSchoolId], references: [id])     
   typeSchoolId     Int

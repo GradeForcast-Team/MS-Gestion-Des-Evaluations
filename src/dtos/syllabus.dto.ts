@@ -11,17 +11,9 @@ export class CreateSyllabusDto {
   @IsNotEmpty()
   nbhr: number;
 
-  @IsString()
-  @IsOptional()
-  semestre: string;
-
   @IsNumber()
   @IsOptional()
   creditCoef: number;
-
-  @IsNumber()
-  @IsOptional()
-  year: number;
 
   @IsString()
   @IsNotEmpty()

@@ -240,7 +240,7 @@ export class SyllabusService {
             create: sessions.concepts.map(concepts => ({
               name: concepts.name,
               quizzes: {
-                create: concepts.quizz.map(quiz => ({
+                create: concepts.quizzes.map(quiz => ({
                   name: quiz.name,
                   questions: {
                     create: quiz.questions.map(question => {
@@ -394,7 +394,7 @@ export class SyllabusService {
               create: session.concepts.map(concept => ({
                 name: concept.name,
                 quizzes: {
-                  create: concept.quizz.map(quiz => ({
+                  create: concept.quizzes.map(quiz => ({
                     name: quiz.name,
                     questions: {
                       create: quiz.questions.map(question => {

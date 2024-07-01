@@ -1,11 +1,9 @@
-import {Learner} from "@interfaces/learner.interface";
-import {Teacher} from "@interfaces/teachers.interface";
-
 export interface Note {
   id: number;
-  score: number;
-  learner?: Learner;
+  score: number; // Utilisation de `number` pour `Float`
   learnerId: number;
-  teacher?: Teacher;
   teacherId: number;
+  syllabusId: number;
+  typeAssessmentId: number;
+  academicYearId: number;
 }

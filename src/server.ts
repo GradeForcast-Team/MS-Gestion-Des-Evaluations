@@ -16,6 +16,12 @@ import {AssessmentRoute} from "@routes/assessment.route";
 import { SyllabusClasseRoute } from './routes/syllabusClasse.route';
 import { ConceptAutoAssessmentRoute } from './routes/conceptAutoAssessment.route';
 import { ConceptRoute } from './routes/concept.route';
+import { AcademicYearRoute } from './routes/academycYear.route';
+import { EvaluationModeRoute } from './routes/evaluationMode.route';
+import { PedagogicalMethodRoute } from './routes/pedagogicalMethod.route';
+import { TypeAssessmentRoute } from './routes/periode.route';
+import { SupportsPedagogiquesRoute } from './routes/supportPedagogic.route';
+import { PeriodeRoute } from './routes/typeAssessment.route';
 
 ValidateEnv();
 
@@ -35,7 +41,13 @@ const app = new App([
   new ConceptAutoAssessmentRoute(),
   new AssessmentRoute(),
   new SyllabusClasseRoute(),
-  new ConceptRoute()
+  new ConceptRoute(),
+  new AcademicYearRoute(),
+  new TypeAssessmentRoute(),
+  new PeriodeRoute(),
+  new PedagogicalMethodRoute(),
+  new SupportsPedagogiquesRoute(),
+  new EvaluationModeRoute(),
 ]);
 app.listen();
 
