@@ -200,6 +200,7 @@ model SyllabusClasse {
   classe    Classe  @relation(fields: [classeId], references: [id])
   linkSyllabusClasse String @unique
   @@id([syllabusId, classeId])
+   @@unique([syllabusId, classeId], name: "unique_syllabus_classe")
 }
 
 model Note {
@@ -280,7 +281,7 @@ model Session {
 
 model Concept {
   id               Int               @id @default(autoincrement())
-  name             String
+  name             String 
   quizzes          Quiz[]
   conceptAutoAssessment ConceptAutoAssessment[]
   sessionAutoAssessment SessionAutoAssessment[]

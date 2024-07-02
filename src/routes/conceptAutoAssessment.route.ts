@@ -12,9 +12,29 @@ export class ConceptAutoAssessmentRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/autoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.createConceptAutoAssessment);
-    this.router.post(`${this.path}/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.saveSessionAutoAssessment);
-    this.router.get(`${this.path}/getautoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.getConceptAutoAssessmentDetails);
-    this.router.get(`${this.path}/getautoAssessmentForSession/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`, this.conceptAutoAssessment.getSessionAutoAssessmentDetails);
+    this.router.post(
+      `${this.path}/autoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`,
+      this.conceptAutoAssessment.createConceptAutoAssessment
+    );
+    this.router.post(
+      `${this.path}/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`,
+      this.conceptAutoAssessment.saveSessionAutoAssessment
+    );
+    this.router.get(
+      `${this.path}/getautoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`,
+      this.conceptAutoAssessment.getConceptAutoAssessmentDetails
+    );
+    this.router.get(
+      `${this.path}/getautoAssessmentForSession/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`,
+      this.conceptAutoAssessment.getSessionAutoAssessmentDetails
+    );
+    this.router.get(
+      `${this.path}/getLink/session/:sessionId(\\d+)/teacher/:teacherId(\\d+)/school/:schoolId(\\d+)`,
+      this.conceptAutoAssessment.getAutoAssessmentLink
+    );
+    this.router.get(
+      `${this.path}/generateLink/session/:sessionId(\\d+)/teacher/:teacherId(\\d+)/school/:schoolId(\\d+)`,
+      this.conceptAutoAssessment.generateAutoAssessmentLink
+    );
   }
 }

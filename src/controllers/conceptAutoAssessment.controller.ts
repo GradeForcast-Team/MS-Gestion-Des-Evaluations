@@ -53,4 +53,32 @@ export class ConceptAutoAssessmentController {
       next(error);
     }
   };
+
+  // Générer un lien pour l'auto-évaluation d'une session
+  public getAutoAssessmentLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { sessionId, teacherId, schoolId } = req.params;
+      const linkData = await this.conceptAutoAssessmentService.getAutoAssessmentLink(
+        parseInt(sessionId),
+        parseInt(teacherId),
+        parseInt(schoolId)
+      );
+      res.status(200).json({ data: linkData, message: 'Link generated' });
+    } catch (error) {
+      next(error);
+    }
+  };
+  public generateAutoAssessmentLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { sessionId, teacherId, schoolId } = req.params;
+      const linkData = await this.conceptAutoAssessmentService.generateAutoAssessmentLink(
+        parseInt(sessionId),
+        parseInt(teacherId),
+        parseInt(schoolId)
+      );
+      res.status(200).json({ data: linkData, message: 'Link generated' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

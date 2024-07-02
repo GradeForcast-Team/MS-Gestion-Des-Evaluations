@@ -575,23 +575,23 @@ export class SyllabusService {
   //   return updatedSyllabus;
   // }
 
-  // async deleteSyllabus(syllabusId: number, teacherId: number): Promise<Syllabus | null> {
-  //   const existingSyllabus = await this.prisma.syllabus.findFirst({
-  //     where: {
-  //       id: syllabusId,
-  //       teacherId: teacherId,
-  //     },
-  //   });
+  async deleteSyllabus(syllabusId: number, teacherId: number): Promise<Syllabus | null> {
+    const existingSyllabus = await this.prisma.syllabus.findFirst({
+      where: {
+        id: syllabusId,
+        teacherId: teacherId,
+      },
+    });
 
-  //   if (!existingSyllabus) {
-  //     throw new HttpException(404, 'Syllabus not found for the given teacher');
-  //   }
+    if (!existingSyllabus) {
+      throw new HttpException(404, 'Syllabus not found for the given teacher');
+    }
 
-  //   return this.prisma.syllabus.delete({
-  //     where: {
-  //       id: syllabusId,
-  //     },
-  //   });
-  // }
+    return this.prisma.syllabus.delete({
+      where: {
+        id: syllabusId,
+      },
+    });
+  }
   
 }

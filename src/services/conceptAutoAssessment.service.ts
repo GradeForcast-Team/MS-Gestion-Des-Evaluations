@@ -295,4 +295,204 @@ export class ConceptAutoAssessmentService {
     }
   }
 
+  // public async generateAutoAssessmentLink(sessionId: number, teacherId: number): Promise<string> {
+  //   console.log("generation")
+  //   const session = await this.prisma.session.findUnique({
+  //     where: { id: sessionId },
+  //     include: {
+  //       syllabus: {
+  //         include: {
+  //           classe: {
+  //             include: {
+  //               classe: {
+  //                 include: {
+  //                   ecole: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  
+  //   if (!session) {
+  //     throw new HttpException(404, 'Session not found');
+  //   }
+  
+  //   const schoolId = session.syllabus.classe[0].classe.ecole.id;
+  //   const baseUrl = 'http://localhost:4200/assessment/self-assessment-form';
+  //   const link = `${baseUrl}?sessionId=${sessionId}&teacherId=${teacherId}&schoolId=${schoolId}`;
+  
+  //   return link;
+  // }
+  
+  public async generateAutoAssessmentLink(sessionId: number, teacherId: number, schoolId: number): Promise<string> {
+    const baseUrl = 'http://localhost:4200/assessment/self-assessment-form';
+    const link = `${baseUrl}?sessionId=${sessionId}&teacherId=${teacherId}&schoolId=${schoolId}`;
+  
+    return link;
+  }
+  
+  // public async getAutoAssessmentLink(sessionId: number, teacherId: number): Promise<any> {
+  //   const link = await this.generateAutoAssessmentLink(sessionId, teacherId);
+  //   console.log("error")
+  //   const session = await this.prisma.session.findUnique({
+  //     where: { id: sessionId },
+  //     include: {
+  //       syllabus: {
+  //         include: {
+  //           teacher: {
+  //             include: {
+  //               user: true,
+  //             },
+  //           },
+  //           classe: {
+  //             include: {
+  //               classe: {
+  //                 include: {
+  //                   ecole: true,
+  //                 },
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //       concept: true
+  //     },
+  //   });
+  
+  //   if (!session) {
+  //     throw new HttpException(404, 'Session not found');
+  //   }
+  
+  //   const teacher = await this.prisma.teacher.findUnique({
+  //     where: { id: teacherId },
+  //     include: {
+  //       user: true,
+  //     },
+  //   });
+  
+  //   if (!teacher) {
+  //     throw new HttpException(404, 'Teacher not found');
+  //   }
+  
+  //   const school = session.syllabus.classe[0].classe.ecole;
+  
+  //   return {
+  //     link: link,
+  //     session: {
+  //       id: session.id,
+  //       name: session.name,
+  //       startDate: session.startDate,
+  //       endDate: session.endDate,
+  //       concepts: session.concept.map((concept) => ({
+  //         id: concept.id,
+  //         name: concept.name,
+  //         })),
+  //       },
+  //     syllabus: {
+  //       id: session.syllabus.id,
+  //       name: session.syllabus.name,
+  //       school: {
+  //         id: school.id,
+  //         name: school.name,
+  //         telephone: school.telephone,
+  //       },
+  //     },
+  //     teacher: {
+  //       id: teacher.user.id,
+  //       name: teacher.user.name,
+  //       surname: teacher.user.surname,
+  //       email: teacher.user.email,
+  //     },
+  //   };
+  // }
+  
+  public async getAutoAssessmentLink(sessionId: number, teacherId: number, schoolId: number): Promise<any> {
+    const link = await this.generateAutoAssessmentLink(sessionId, teacherId, schoolId);
+  
+    const session = await this.prisma.session.findUnique({
+      where: { id: sessionId },
+      include: {
+        syllabus: {
+          include: {
+            teacher: {
+              include: {
+                user: true,
+              },
+            },
+            classe: {
+              include: {
+                classe: {
+                  include: {
+                    ecole: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        concept:true
+      },
+    });
+  
+    if (!session) {
+      throw new HttpException(404, 'Session not found');
+    }
+  
+    const teacher = await this.prisma.teacher.findUnique({
+      where: { id: teacherId },
+      include: {
+        user: true,
+      },
+    });
+  
+    if (!teacher) {
+      throw new HttpException(404, 'Teacher not found');
+    }
+  
+    const school = session.syllabus.classe[0].classe.ecole;
+  
+    if (school.id !== schoolId) {
+      throw new HttpException(404, 'School not found for this session');
+    }
+  
+    return {
+      link: link,
+      session: {
+        id: session.id,
+        name: session.name,
+        startDate: session.startDate,
+        endDate: session.endDate,
+        concepts: session.concept.map((concept) => ({
+          id: concept.id,
+          name: concept.name,
+        })),
+      },
+      syllabus: {
+        id: session.syllabus.id,
+        name: session.syllabus.name,
+        teacher: {
+          id: session.syllabus.teacher.id,
+          name: session.syllabus.teacher.user.name,
+          surname: session.syllabus.teacher.user.surname,
+          email: session.syllabus.teacher.user.email,
+        },
+        school: {
+          id: school.id,
+          name: school.name,
+          telephone: school.telephone,
+        },
+      },
+      teacher: {
+        id: teacher.user.id,
+        name: teacher.user.name,
+        surname: teacher.user.surname,
+        email: teacher.user.email,
+      },
+    };
+  }
+  
+  
 }
