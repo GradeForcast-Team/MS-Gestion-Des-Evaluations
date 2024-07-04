@@ -14,6 +14,7 @@ import * as multer from 'multer';
 import Any = jasmine.Any;
 import {Teacher} from "@interfaces/teachers.interface";
 import {EmailService} from "@services/email.service";
+import { UpdateTeacherDto } from '@/dtos/teacher.dto';
 const speakeasy = require('speakeasy');
 
 @Service()
@@ -42,7 +43,6 @@ export class AuthService {
       await this.users.create({
         data: {
           ... userData,
-          id_ecole: Number(userData.id_ecole),
           roleId: 1,
           password: hashedPassword,
           validate_account_token: uuid(),
@@ -105,5 +105,78 @@ export class AuthService {
   public createCookie(tokenData: TokenData): string {
     return `Authorization=${tokenData.token}; HttpOnly; Max-Age=${tokenData.expiresIn};`;
   }
+
+  public async updateSpecificInfoTeacher(teacherId: number, teacherData: UpdateTeacherDto) {
+    const existingTeacher = await this.prisma.teacher.findUnique({
+      where: { userId: teacherId },
+      include: {
+        user: {
+          include: {
+            addresseId: true,
+          },
+        },
+        specialisationTeacher: true,
+        teacherSchools: true,
+      },
+    });
+
+    if (!existingTeacher) {
+      throw new Error('Teacher not found');
+    }
+
+    const updatedTeacher = await this.prisma.teacher.update({
+      where: { userId: teacherId },
+      data: {
+        user: {
+          update: {
+            name: teacherData.name,
+            surname: teacherData.surname,
+            birthday: teacherData.birthday,
+            phone: teacherData.phone,
+            photo: teacherData.photo,
+            sexe: teacherData.sexe,
+            description: teacherData.description,
+            addresseId: existingTeacher.user.addresseId ? {
+              update: {
+                country: teacherData.country,
+                city: teacherData.city,
+                state: teacherData.state,
+                postal_code: teacherData.postal_code,
+              },
+            } : teacherData.country && teacherData.city && teacherData.state && teacherData.postal_code ? {
+              create: {
+                country: teacherData.country,
+                city: teacherData.city,
+                state: teacherData.state,
+                postal_code: teacherData.postal_code,
+              },
+            } : undefined,
+          },
+        },
+        StartDateTeaching: teacherData.StartDateTeaching,
+        pool: teacherData.pool,
+        specialisationTeacher: teacherData.specialisations ? {
+          deleteMany: {}, // Supprime toutes les relations existantes
+          create: teacherData.specialisations.split(',').map(id => ({
+            specialisation: {
+              connect: { id: parseInt(id, 10) }
+            }
+          })),
+        } : undefined,
+        teacherSchools: teacherData.schools ? {
+          deleteMany: {}, // Supprime toutes les relations existantes
+          create: teacherData.schools.split(',').map(id => ({
+            school: {
+              connect: { id: parseInt(id, 10) }
+            }
+          })),
+        } : undefined,
+      },
+    });
+
+    return updatedTeacher;
+}
+
+
 
 }

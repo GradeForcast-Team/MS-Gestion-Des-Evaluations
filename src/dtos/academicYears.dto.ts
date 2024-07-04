@@ -4,9 +4,6 @@ import { CreateSyllabusDto } from './syllabus.dto';
 import { CreateNoteDto } from './note.dto';
 
 export class CreateAcademicYearDto {
-  @IsNumber()
-  @IsNotEmpty()
-  id: number;
 
   @IsNumber()
   @IsNotEmpty()
@@ -15,16 +12,6 @@ export class CreateAcademicYearDto {
   @IsNumber()
   @IsNotEmpty()
   endYear: number;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateSyllabusDto)
-  syllabus: CreateSyllabusDto[];
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateNoteDto)
-  note: CreateNoteDto[];
 }
 
 export class ValidateAcademicYearDto {

@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { uploadImage } from '@utils/Helper';
 import { HttpException } from '@exceptions/HttpException';
+import { UpdateTeacherDto } from '@/dtos/teacher.dto';
 
 export class AuthController {
   public auth = Container.get(AuthService);
@@ -82,5 +83,26 @@ export class AuthController {
   public registergoogle = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
     } catch (error) {}
+  };
+
+  public getTeacherById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.id);
+      const teacherData = await this.auth.getTeacherById(teacherId);
+      res.status(200).json({ data: teacherData, message: 'Teacher data retrieved' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.id);
+      const teacherData: UpdateTeacherDto = req.body;
+      const updateTeacherData = await this.auth.updateSpecificInfoTeacher(teacherId, teacherData);
+      res.status(200).json({ data: updateTeacherData, message: 'Teacher updated' });
+    } catch (error) {
+      next(error);
+    }
   };
 }

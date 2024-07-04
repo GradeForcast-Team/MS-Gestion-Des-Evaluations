@@ -22,8 +22,6 @@ model User {
   email                     String     @unique
   phone                     String?
   description               String?
-  id_ecole                  Int?       // Référence vers l'école à laquelle l'utilisateur appartient
-  school                    Schools?   @relation(fields: [id_ecole], references: [id])
   role     Role     @relation(fields: [roleId], references: [id])
   roleId                  Int
   teacher                   Teacher?
@@ -32,7 +30,6 @@ model User {
   reset_password_expires    DateTime?
   validate_account_token    String?    @unique
   validate_account_expires  DateTime?
-  specialisation             Specialisation[]
   diplomes    Diplome[]
   langages    Langage[]
   levelEducationId  Int?
@@ -45,11 +42,11 @@ model User {
 
 model Address {
   id           Int      @id @default(autoincrement())
-  street       String
-  city         String
-  state        String
-  postal_code  String
-  country      String
+  street       String?
+  city         String?
+  state        String?
+  postal_code  String?
+  country      String?
   userId       Int   @unique  // Clé étrangère optionnelle pour référencer l'utilisateur propriétaire
   user          User     @relation(fields: [userId], references: [id])
 }
@@ -57,15 +54,17 @@ model Address {
 model Teacher  {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
-  experience Int?
+  StartDateTeaching Int?
   user       User     @relation(fields: [userId], references: [id])
-  salaire    Float?
+  pool    Float?
   est_membre Boolean  @default(false)
   classes   TeacherClasse[]
   notes     Note[]
   typeTeacher   TypeTeacher? @relation(fields: [typeTeacherId], references: [id])
   typeTeacherId Int?
   syllabus Syllabus[]
+  specialisationTeacher             SpecialisationTeacher[]
+  teacherSchools TeacherSchools[]
 }
 
 model Learner {
@@ -75,6 +74,8 @@ model Learner {
   est_membre Boolean  @default(false)
   classe    Classe? @relation(fields: [classeId], references: [id])   // Un apprenant appartient à une seule classe
   classeId  Int
+  school                    Schools?   @relation(fields: [id_school], references: [id])
+  id_school Int
   notes     Note[]
   learnerAnswer LearnerAnswer[]
   conceptAutoAssessment ConceptAutoAssessment[]
@@ -96,10 +97,18 @@ model Schools {
   telephone    String?
   typeSchools  TypeSchools   @relation(fields: [typeSchoolId], references: [id])
   typeSchoolId Int
-  users        User[]        // Relation avec les utilisateurs (personnes)
   classes      Classe[]      // Relation avec les classes
+  learners    Learner[]
+  teacherSchools TeacherSchools[]
 }
 
+model TeacherSchools{
+  id           Int           @id @default(autoincrement())
+  school       Schools   @relation(fields: [schoolId], references: [id])
+  schoolId    Int
+  teacherId Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+}
 model Classe {
   id          Int       @id @default(autoincrement())
   name         String
@@ -123,9 +132,15 @@ model Specialisation {
   id            Int          @id @default(autoincrement())
   name          String
   description   String?
-  teachers      User[]    // Relation avec les enseignants
+  specialisationTeacher      SpecialisationTeacher[]    // Relation avec les enseignants
 }
-
+model SpecialisationTeacher {
+  id         Int      @id @default(autoincrement())
+  teacherId Int
+  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  specialisationId Int
+  specialisation   Specialisation @relation(fields: [specialisationId], references: [id])
+}
 model Diplome {
   id          Int      @id @default(autoincrement())
   name        String
