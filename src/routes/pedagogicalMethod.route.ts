@@ -20,12 +20,12 @@ export class PedagogicalMethodRoute implements Routes {
       this.pedagogicalMethodController.createPedagogicalMethod
     );
     this.router.put(
-      `${this.path}/update/:id(\\d+)`,
+      `${this.path}/update`,
       ValidationMiddleware(ValidatePedagogicalMethodDto),
       this.pedagogicalMethodController.updatePedagogicalMethod
     );
     this.router.get(`${this.path}/all`, this.pedagogicalMethodController.getAllPedagogicalMethods);
-    this.router.get(`${this.path}/:id(\\d+)`, this.pedagogicalMethodController.getPedagogicalMethodById);
-    this.router.delete(`${this.path}/delete/:id(\\d+)`, this.pedagogicalMethodController.deletePedagogicalMethod);
+    this.router.get(`${this.path}`, this.pedagogicalMethodController.getPedagogicalMethodById);
+    this.router.delete(`${this.path}/delete`, this.pedagogicalMethodController.deletePedagogicalMethod);
   }
 }

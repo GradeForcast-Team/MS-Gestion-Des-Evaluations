@@ -1,24 +1,22 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
-import {validateSyllabusMiddleware} from "@middlewares/validateSyllabus.middleware";
-import {QuestionController} from "@controllers/question.controller";
-import {CreateQuestionDto} from "@dtos/question.dto";
+import { QuestionController } from '@/controllers/question.controller';
 
 export class QuestionRoute implements Routes {
   public path = '/question';
   public router = Router();
-  public question = new QuestionController();
+  public questionController = new QuestionController();
 
   constructor() {
     this.initializeRoutes();
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/create/:id(\\d+)`, validateSyllabusMiddleware(CreateQuestionDto),this.question.createQuestion);
-    this.router.get(`${this.path}/getAllQuestionForQuizz/:id(\\d+)`, this.question.getAllQuestionForQuizz);
-    this.router.get(`${this.path}/getQuestionForQuizz/:QuestionId(\\d+)/quizz/:QuizzId(\\d+)`, this.question.getQuestionById);
-    this.router.put(`${this.path}/updateQuestionForQuizz/:QuestionId(\\d+)/quizz/:QuizzId(\\d+)`, this.question.updateQuestionForQuizz);
-    this.router.delete(`${this.path}/deleteQuestion/:id(\\d+)`, this.question.deleteQuestion);
-    this.router.get(`${this.path}/getRandomQuestion/:id(\\d+)`, this.question.getRandomQuizz);
+    this.router.post(`${this.path}/create`, this.questionController.createQuestion);
+    this.router.get(`${this.path}/all`, this.questionController.getAllQuestionForQuizz);
+    this.router.get(`${this.path}`, this.questionController.getQuestionById);
+    this.router.put(`${this.path}/update`, this.questionController.updateQuestionForQuizz);
+    this.router.delete(`${this.path}/delete`, this.questionController.deleteQuestion);
+    this.router.get(`${this.path}/random`, this.questionController.getRandomQuizz);
   }
 }

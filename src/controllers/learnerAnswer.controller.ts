@@ -1,25 +1,21 @@
-import { Classe } from '@/interfaces/classe.interface';
-import { ClasseService } from '@/services/classe.service';
 import { NextFunction, Request, Response } from 'express';
 import { Container } from 'typedi';
-import {LearnerAnswerService} from "@services/learnerAnswer.service";
-import {LearnerAnswer} from "@interfaces/learnerAnswer.interface";
+import { LearnerAnswerService } from '@services/learnerAnswer.service';
+import { LearnerAnswer } from '@interfaces/learnerAnswer.interface';
 
 export class LearnerAnswerController {
   public learnerAnswer = Container.get(LearnerAnswerService);
 
-  public createlearnerAnswer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public createLearnerAnswer = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { quizzId, learnerId } = req.params;
+      const quizzId = Number(req.query.quizzId);
+      const learnerId = Number(req.query.learnerId);
       const learnerAnswerData: LearnerAnswer[] = req.body;
-      const createlearnerAnswerData: LearnerAnswer[] = await this.learnerAnswer.createLearnerResponse(parseInt(quizzId),parseInt(learnerId), learnerAnswerData);
+      const createLearnerAnswerData: LearnerAnswer[] = await this.learnerAnswer.createLearnerResponse(quizzId, learnerId, learnerAnswerData);
 
-      res.status(201).json({ data: createlearnerAnswerData, message: 'created' });
+      res.status(201).json({ data: createLearnerAnswerData, message: 'created' });
     } catch (error) {
       next(error);
     }
   };
-
-
-
 }

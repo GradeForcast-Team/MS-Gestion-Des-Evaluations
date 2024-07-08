@@ -4,7 +4,6 @@ import { ValidationMiddleware } from '@middlewares/validation.middleware';
 import { EvaluationModeController } from '@/controllers/evaluationMode.controller';
 import { CreateEvaluationModeDto, ValidateEvaluationModeDto } from '@/dtos/evaluationMode.dto';
 
-
 export class EvaluationModeRoute implements Routes {
   public path = '/evaluation-mode';
   public router = Router();
@@ -21,12 +20,12 @@ export class EvaluationModeRoute implements Routes {
       this.evaluationModeController.createEvaluationMode
     );
     this.router.put(
-      `${this.path}/update/:id(\\d+)`,
+      `${this.path}/update`,
       ValidationMiddleware(ValidateEvaluationModeDto),
       this.evaluationModeController.updateEvaluationMode
     );
     this.router.get(`${this.path}/all`, this.evaluationModeController.getAllEvaluationModes);
-    this.router.get(`${this.path}/:id(\\d+)`, this.evaluationModeController.getEvaluationModeById);
-    this.router.delete(`${this.path}/delete/:id(\\d+)`, this.evaluationModeController.deleteEvaluationMode);
+    this.router.get(`${this.path}`, this.evaluationModeController.getEvaluationModeById);
+    this.router.delete(`${this.path}/delete`, this.evaluationModeController.deleteEvaluationMode);
   }
 }

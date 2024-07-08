@@ -85,15 +85,15 @@ export class AuthController {
     } catch (error) {}
   };
 
-  public getTeacherById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const teacherId = Number(req.params.id);
-      const teacherData = await this.auth.getTeacherById(teacherId);
-      res.status(200).json({ data: teacherData, message: 'Teacher data retrieved' });
-    } catch (error) {
-      next(error);
-    }
-  };
+  // public getTeacherById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //   try {
+  //     const teacherId = Number(req.params.id);
+  //     const teacherData = await this.auth.(teacherId);
+  //     res.status(200).json({ data: teacherData, message: 'Teacher data retrieved' });
+  //   } catch (error) {
+  //     next(error);
+  //   }
+  // };
 
   public updateTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
-import {ConceptAutoAssessmentController} from "@controllers/conceptAutoAssessment.controller";
+import { ConceptAutoAssessmentController } from '@controllers/conceptAutoAssessment.controller';
 
 export class ConceptAutoAssessmentRoute implements Routes {
   public path = '/conceptAutoAssessment';
@@ -13,27 +13,27 @@ export class ConceptAutoAssessmentRoute implements Routes {
 
   private initializeRoutes() {
     this.router.post(
-      `${this.path}/autoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`,
+      `${this.path}/autoAssessmentForOneConcept`, 
       this.conceptAutoAssessment.createConceptAutoAssessment
     );
     this.router.post(
-      `${this.path}/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`,
+      `${this.path}/sessionAutoAssessment`, 
       this.conceptAutoAssessment.saveSessionAutoAssessment
     );
     this.router.get(
-      `${this.path}/getautoAssessmentForOneConcept/concept/:conceptId(\\d+)/learner/:learnerId(\\d+)`,
+      `${this.path}/getAutoAssessmentForOneConcept`, 
       this.conceptAutoAssessment.getConceptAutoAssessmentDetails
     );
     this.router.get(
-      `${this.path}/getautoAssessmentForSession/session/:sessionId(\\d+)/learner/:learnerId(\\d+)`,
+      `${this.path}/getAutoAssessmentForSession`, 
       this.conceptAutoAssessment.getSessionAutoAssessmentDetails
     );
     this.router.get(
-      `${this.path}/getLink/session/:sessionId(\\d+)/teacher/:teacherId(\\d+)/school/:schoolId(\\d+)`,
+      `${this.path}/getLink`, 
       this.conceptAutoAssessment.getAutoAssessmentLink
     );
     this.router.get(
-      `${this.path}/generateLink/session/:sessionId(\\d+)/teacher/:teacherId(\\d+)/school/:schoolId(\\d+)`,
+      `${this.path}/generateLink`, 
       this.conceptAutoAssessment.generateAutoAssessmentLink
     );
   }

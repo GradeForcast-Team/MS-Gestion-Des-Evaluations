@@ -17,7 +17,7 @@ export class AuthRoute implements Routes {
   private initializeRoutes() {
     this.router.post(`${this.path}/registerTeacher`, this.auth.registerTeacher);
     this.router.post(`${this.path}/loginTeacher`, ValidationMiddleware(UpdateUserDto), this.auth.logInTeacher);
-    this.router.get(`${this.path}/teacher/:id`, this.auth.getTeacherById);
+    // this.router.get(`${this.path}/teacher/:id`, this.auth.);
     this.router.put(`${this.path}/updateSpecificInfoTeacher/:id`,this.auth.updateTeacher);
   }
 }

@@ -18,7 +18,7 @@ export class AcademicYearController {
 
   public getAcademicYearById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const academicYearId = Number(req.params.id);
+      const academicYearId = Number(req.query.id);
       const academicYear: AcademicYear = await this.academicYear.getAcademicYearById(academicYearId);
       res.status(200).json({ data: academicYear });
     } catch (error) {
@@ -39,7 +39,7 @@ export class AcademicYearController {
   public updateAcademicYear = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const academicYearData: ValidateAcademicYearDto = req.body;
-      const academicYearId = Number(req.params.id);
+      const academicYearId = Number(req.query.id);
       const updatedAcademicYear: AcademicYear = await this.academicYear.updateAcademicYear(academicYearId, academicYearData);
       res.status(200).json({ data: updatedAcademicYear, message: 'updated' });
     } catch (error) {
@@ -49,7 +49,7 @@ export class AcademicYearController {
 
   public deleteAcademicYear = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const academicYearId = Number(req.params.id);
+      const academicYearId = Number(req.query.id);
       const deletedAcademicYear: AcademicYear = await this.academicYear.deleteAcademicYear(academicYearId);
       res.status(200).json({ data: deletedAcademicYear, message: 'deleted' });
     } catch (error) {

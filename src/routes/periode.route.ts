@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import { ValidationMiddleware } from '@middlewares/validation.middleware';
-import { TypeAssessmentController } from '@/controllers/typeAssessment.controller';
-import { CreateTypeAssessmentDto, ValidateTypeAssessmentDto } from '@/dtos/typeAssessment.dto';
+import { PeriodeController } from '@/controllers/periode.controller';
+import { CreatePeriodeDto, ValidatePeriodeDto } from '@/dtos/periode.dto';
 
-export class TypeAssessmentRoute implements Routes {
-  public path = '/type-assessment';
+export class PeriodeRoute implements Routes {
+  public path = '/periode';
   public router = Router();
-  public typeAssessmentController = new TypeAssessmentController();
+  public periodeController = new PeriodeController();
 
   constructor() {
     this.initializeRoutes();
@@ -16,16 +16,16 @@ export class TypeAssessmentRoute implements Routes {
   private initializeRoutes() {
     this.router.post(
       `${this.path}/create`,
-      ValidationMiddleware(CreateTypeAssessmentDto),
-      this.typeAssessmentController.createTypeAssessment
+      ValidationMiddleware(CreatePeriodeDto),
+      this.periodeController.createPeriode
     );
     this.router.put(
-      `${this.path}/update/:id(\\d+)`,
-      ValidationMiddleware(ValidateTypeAssessmentDto),
-      this.typeAssessmentController.updateTypeAssessment
+      `${this.path}/update`,
+      ValidationMiddleware(ValidatePeriodeDto),
+      this.periodeController.updatePeriode
     );
-    this.router.get(`${this.path}/all`, this.typeAssessmentController.getAllTypeAssessments);
-    this.router.get(`${this.path}/:id(\\d+)`, this.typeAssessmentController.getTypeAssessmentById);
-    this.router.delete(`${this.path}/delete/:id(\\d+)`, this.typeAssessmentController.deleteTypeAssessment);
+    this.router.get(`${this.path}/all`, this.periodeController.getAllPeriodes);
+    this.router.get(`${this.path}`, this.periodeController.getPeriodeById);
+    this.router.delete(`${this.path}/delete`, this.periodeController.deletePeriode);
   }
 }

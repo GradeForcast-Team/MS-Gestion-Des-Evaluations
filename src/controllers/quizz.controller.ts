@@ -6,10 +6,11 @@ import { Quiz } from '@interfaces/quizz.interface';
 
 export class QuizzController {
   public quizzService = Container.get(QuizzService);
+
   public createQuizz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     console.log(req.body);
     try {
-      const conceptId = Number(req.params.id);
+      const conceptId = Number(req.query.conceptId);
       const quizz = req.body;
       const createdQuizz = await this.quizzService.createQuiz(conceptId, quizz);
 
@@ -21,7 +22,7 @@ export class QuizzController {
 
   public getAllQuizzForConcept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const conceptId = Number(req.params.id);
+      const conceptId = Number(req.query.conceptId);
       const getAllQuizzForSession = await this.quizzService.getAllQuizzForConcept(conceptId);
       res.status(200).json({ data: getAllQuizzForSession });
     } catch (error) {
@@ -29,22 +30,13 @@ export class QuizzController {
     }
   };
 
-  // public getQuizzById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     const { sessionId, quizzId } = req.params;
-  //     const getQuizzForSesssion = await this.quizzService.getQuizzById(parseInt(sessionId), parseInt(quizzId));
-  //     res.status(200).json({ data: getQuizzForSesssion });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
-
   public updateQuizzForConcept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const quizz: Quiz = req.body;
-      const { conceptId, quizzId } = req.params;
+      const conceptId = Number(req.query.conceptId);
+      const quizzId = Number(req.query.quizzId);
 
-      const updateQuizzForSession: Quiz = await this.quizzService.updateQuizzForConcept(parseInt(conceptId), parseInt(quizzId), quizz);
+      const updateQuizzForSession: Quiz = await this.quizzService.updateQuizzForConcept(conceptId, quizzId, quizz);
 
       res.status(201).json({ data: updateQuizzForSession, message: 'updated' });
     } catch (error) {
@@ -52,40 +44,21 @@ export class QuizzController {
     }
   };
 
-
-  // public updateQuizzSpecial = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   console.log(req.body)
-  //   try {
-  //     const quizz: Quiz = req.body;
-  //     const { sessionId, quizzId } = req.params;
-
-  //     const updateQuizzForSession: Quiz = await this.quizzService.updateQuiz(parseInt(sessionId), parseInt(quizzId), quizz);
-
-  //     res.status(201).json({ data: updateQuizzForSession, message: 'updated' });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
-
   public calculerNoteLearner = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-
     try {
+      const learnerId = Number(req.query.learnerId);
+      const quizzId = Number(req.query.quizzId);
 
-      const { learnerId, quizzId } = req.params;
-
-      const scoreQuizz = await  this.quizzService.calculateLearnerScore(parseInt(learnerId), parseInt(quizzId));
-      res.status(200).json({ data: scoreQuizz})
+      const scoreQuizz = await this.quizzService.calculateLearnerScore(learnerId, quizzId);
+      res.status(200).json({ data: scoreQuizz });
     } catch (error) {
-      next(error)
+      next(error);
     }
-
-  }
-
-  
+  };
 
   public deleteQuizz = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const quizzId = Number(req.params.id);
+      const quizzId = Number(req.query.id);
       const deleteQuizz: Quiz = await this.quizzService.deleteQuizz(quizzId);
 
       res.status(200).json({ data: deleteQuizz, message: 'deleted' });

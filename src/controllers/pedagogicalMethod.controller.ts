@@ -4,7 +4,6 @@ import { PedagogicalMethodService } from '@/services/pedagogicalMethod.service';
 import { Request, Response, NextFunction } from 'express';
 import { Container } from 'typedi';
 
-
 export class PedagogicalMethodController {
   public pedagogicalMethodService = Container.get(PedagogicalMethodService);
 
@@ -19,7 +18,7 @@ export class PedagogicalMethodController {
 
   public getPedagogicalMethodById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const pedagogicalMethodId = Number(req.params.id);
+      const pedagogicalMethodId = Number(req.query.id);
       const pedagogicalMethod: PedagogicalMethod = await this.pedagogicalMethodService.getPedagogicalMethodById(pedagogicalMethodId);
       res.status(200).json({ data: pedagogicalMethod });
     } catch (error) {
@@ -40,7 +39,7 @@ export class PedagogicalMethodController {
   public updatePedagogicalMethod = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const pedagogicalMethodData: ValidatePedagogicalMethodDto = req.body;
-      const pedagogicalMethodId = Number(req.params.id);
+      const pedagogicalMethodId = Number(req.query.id);
       const updatedPedagogicalMethod: PedagogicalMethod = await this.pedagogicalMethodService.updatePedagogicalMethod(pedagogicalMethodId, pedagogicalMethodData);
       res.status(200).json({ data: updatedPedagogicalMethod, message: 'updated' });
     } catch (error) {
@@ -50,7 +49,7 @@ export class PedagogicalMethodController {
 
   public deletePedagogicalMethod = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const pedagogicalMethodId = Number(req.params.id);
+      const pedagogicalMethodId = Number(req.query.id);
       const deletedPedagogicalMethod: PedagogicalMethod = await this.pedagogicalMethodService.deletePedagogicalMethod(pedagogicalMethodId);
       res.status(200).json({ data: deletedPedagogicalMethod, message: 'deleted' });
     } catch (error) {

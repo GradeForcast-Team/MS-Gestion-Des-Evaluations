@@ -20,12 +20,12 @@ export class AcademicYearRoute implements Routes {
       this.academicYearController.createAcademicYear
     );
     this.router.put(
-      `${this.path}/update/:id(\\d+)`,
+      `${this.path}/update`,
       ValidationMiddleware(ValidateAcademicYearDto),
       this.academicYearController.updateAcademicYear
     );
     this.router.get(`${this.path}/all`, this.academicYearController.getAllAcademicYears);
-    this.router.get(`${this.path}/:id(\\d+)`, this.academicYearController.getAcademicYearById);
-    this.router.delete(`${this.path}/delete/:id(\\d+)`, this.academicYearController.deleteAcademicYear);
+    this.router.get(`${this.path}`, this.academicYearController.getAcademicYearById);
+    this.router.delete(`${this.path}/delete`, this.academicYearController.deleteAcademicYear);
   }
 }
