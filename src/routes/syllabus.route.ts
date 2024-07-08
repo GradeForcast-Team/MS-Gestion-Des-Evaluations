@@ -21,6 +21,7 @@ export class SyllabusRoute implements Routes {
     this.router.get(`${this.path}/getAllSyllabusForTeacher/:id(\\d+)`, this.syllabus.getAllSyllabusForTeacher);
     // this.router.get(`${this.path}/getSyllabusForTeacher/:syllabusId(\\d+)/teacher/:teacherId(\\d+)`, this.syllabus.getSyllabusForTeacher);
     this.router.put(`${this.path}/updateSyllabus/:syllabusId(\\d+)/teacher/:teacherId(\\d+)`, this.syllabus.updateSyllabus);
+    
     // this.router.delete(`${this.path}/deleteSyllabus/:syllabusId(\\d+)/teacher/:teacherId(\\d+)`, this.syllabus.deleteSyllabus);
 
   }

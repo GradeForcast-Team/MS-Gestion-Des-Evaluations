@@ -202,4 +202,97 @@ export class SyllabusClasseService {
     }
   }
   
+  public async getAllSyllabusByLearnerId(learnerId: number): Promise<any[]> {
+    try {
+      const learner = await this.prisma.learner.findUnique({
+        where: { id: learnerId },
+        include: {
+          classe: {
+            include: {
+              syllabusClasse: {
+                include : {
+                  syllabus : {
+                    include : {
+                      session : {
+                        include: {
+                          concept : {
+                            include: {
+                              quizzes : {
+                                include :{
+                                  questions : {
+                                    include : {
+                                      propositions : true
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                            
+                          }
+                        }
+                      }
+                    }
+                  },
+                  classe: true
+                  }
+                }
+              }
+            },
+          },
+      });
+
+      if (!learner) {
+        throw new HttpException(404, 'Learner not found');
+      }
+
+      const syllabi = learner.classe.syllabusClasse.map(syllabusClasse => syllabusClasse.syllabus);
+
+      return syllabi;
+    } catch (error) {
+      console.error("Error fetching syllabus for learner:", error);
+      throw new HttpException(500, 'Internal Server Error');
+    }
+  }
+  //afficher one syllabus pour un learner
+  public async getSyllabusClasseLearnerById(syllabusId: number, classeId:number): Promise<any> {
+    try {
+      const syllabusClasse = await this.prisma.syllabusClasse.findFirst({
+        where: { syllabusId:syllabusId,classeId: classeId },
+        include: {
+          syllabus : {
+            include : {
+              session : {
+                include: {
+                  concept : {
+                    include: {
+                      quizzes : {
+                        include :{
+                          questions : {
+                            include : {
+                              propositions : true
+                            }
+                          }
+                        }
+                      }
+                    }
+                    
+                  }
+                }
+              }
+            }
+          },
+          classe: true,
+        },
+      });
+
+      if (!syllabusClasse) {
+        throw new HttpException(404, 'Syllabus not found');
+      }
+
+      return syllabusClasse.syllabus;
+    } catch (error) {
+      console.error("Error fetching syllabus by ID:", error);
+      throw new HttpException(500, 'Internal Server Error');
+    }
+  }
 }

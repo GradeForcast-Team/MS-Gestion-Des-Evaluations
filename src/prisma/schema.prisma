@@ -116,7 +116,7 @@ model Classe {
   ecoleId     Int
   teachers   TeacherClasse[]
   learners  Learner[]
-  syllabus SyllabusClasse[] 
+  syllabusClasse SyllabusClasse[] 
 }
 
 model TeacherClasse {
@@ -205,7 +205,7 @@ model Syllabus {
   bibliography Bibliography[]
   periode       Periode? @relation(fields: [periodeId], references: [id])     
   periodeId     Int
-  classe SyllabusClasse[] 
+  syllabusClasse SyllabusClasse[] 
 }
 
 model SyllabusClasse {

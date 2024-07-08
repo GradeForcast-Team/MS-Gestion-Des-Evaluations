@@ -48,4 +48,32 @@ export class SyllabusClasseController {
       next(error);
     }
   };
+
+  // Fonction pour obtenir tous les syllabus d'un apprenant
+  public getAllSyllabusByLearnerId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const { learnerId } = req.query;
+
+    try {
+      const syllabi = await this.syllabusClasseService.getAllSyllabusByLearnerId(Number(learnerId));
+      res.status(200).json({ data: syllabi });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Fonction pour obtenir un syllabus par ID
+  public getSyllabusClasseLearnerById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    
+    const { syllabusId, classeId } = req.query;
+
+    try {
+      const syllabus = await this.syllabusClasseService.getSyllabusClasseLearnerById(
+        parseInt(syllabusId as string), 
+        parseInt(classeId as string), 
+      );
+      res.status(200).json({ data: syllabus });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

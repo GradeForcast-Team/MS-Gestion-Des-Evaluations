@@ -358,7 +358,7 @@ export class ConceptAutoAssessmentService {
                 user: true,
               },
             },
-            classe: {
+            syllabusClasse: {
               include: {
                 classe: {
                   include: {
@@ -388,7 +388,7 @@ export class ConceptAutoAssessmentService {
       throw new HttpException(404, 'Teacher not found');
     }
   
-    const syllabusClasse = session.syllabus.classe.find(sc => sc.classe.ecole.id === schoolId);
+    const syllabusClasse = session.syllabus.syllabusClasse.find(sc => sc.classe.ecole.id === schoolId);
   
     if (!syllabusClasse) {
       throw new HttpException(404, 'School not found for this session');
