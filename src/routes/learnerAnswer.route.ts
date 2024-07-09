@@ -3,7 +3,7 @@ import { Routes } from '@interfaces/routes.interface';
 import { LearnerAnswerController } from '@/controllers/learnerAnswer.controller';
 
 export class LearnerAnswerRoute implements Routes {
-  public path = '/learner-answer';
+  public path = '/learnerAnswer';
   public router = Router();
   public learnerAnswerController = new LearnerAnswerController();
 

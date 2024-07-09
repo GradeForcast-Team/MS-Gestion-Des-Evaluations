@@ -4,6 +4,6 @@ import { TypeAssessment } from "./typeAssessment.interface";
 export interface Periode {
     id: number;
     name: string; 
-    typeSchoolId?: number;
+    typeSchoolId: number;
   }
   

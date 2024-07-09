@@ -29,7 +29,7 @@ export class PeriodeService {
   public async createPeriode(periodeData: CreatePeriodeDto): Promise<Periode> {
     return this.periode.create({
       data: {
-        name: periodeData.name,
+        ...periodeData
       },
     });
   }

@@ -7,8 +7,8 @@ export class CreatePeriodeDto {
   name: string;
 
   @IsNumber()
-  @IsOptional()
-  typeSchoolId?: number;
+  @IsNotEmpty()
+  typeSchoolId: number;
 
 }
 

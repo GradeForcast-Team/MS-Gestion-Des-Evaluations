@@ -48,7 +48,7 @@ export class ConceptAutoAssessmentService {
         mastered: mastered,
         learnerId: learnerId,
         conceptId: conceptId,
-        criteriaId: critereId,
+        optionId: critereId,
         noteCritere: note
       },
       include: {
@@ -97,9 +97,9 @@ export class ConceptAutoAssessmentService {
   }
 
   // Auto-évaluation pour la session
-  public async saveSessionAutoAssessment(sessionId: number, learnerId: number, assessments: { conceptId: number; criteriaId: number; }[]): Promise<any> {
-    const getNoteFromCriteria = (criteriaId: number) => {
-      switch (criteriaId) {
+  public async saveSessionAutoAssessment(sessionId: number, learnerId: number, assessments: { conceptId: number; optionId: number; }[]): Promise<any> {
+    const getNoteFromCriteria = (optionId: number) => {
+      switch (optionId) {
         case 1:
           return 0; // Pas du tout compris
         case 2:
@@ -138,8 +138,8 @@ export class ConceptAutoAssessmentService {
     let totalNote = 0;
 
     for (const assessment of assessments) {
-      const { conceptId, criteriaId } = assessment;
-      const note = getNoteFromCriteria(criteriaId);
+      const { conceptId, optionId } = assessment;
+      const note = getNoteFromCriteria(optionId);
       const mastered = note >= 0.6;
 
       const existingAssessment = await this.prisma.conceptAutoAssessment.findUnique({
@@ -162,7 +162,7 @@ export class ConceptAutoAssessmentService {
           },
           data: {
             mastered: mastered,
-            criteriaId: criteriaId,
+            optionId: optionId,
             noteCritere: note,
           },
         });
@@ -172,7 +172,7 @@ export class ConceptAutoAssessmentService {
             mastered: mastered,
             learnerId: learnerId,
             conceptId: conceptId,
-            criteriaId: criteriaId,
+            optionId: optionId,
             noteCritere: note,
           },
         });
@@ -218,7 +218,7 @@ export class ConceptAutoAssessmentService {
               }
             }
           },
-          criteria: true
+          option: true
         }
       });
 
@@ -231,12 +231,12 @@ export class ConceptAutoAssessmentService {
           mastered: autoAssessment.mastered,
           learnerId: autoAssessment.learnerId,
           conceptId: autoAssessment.conceptId,
-          criteriaId: autoAssessment.criteriaId,
+          optionId: autoAssessment.optionId,
           noteCritere: autoAssessment.noteCritere
         },
         learnerAnswerAutoEvaluation: {
           concept: autoAssessment.concept,
-          criteria: autoAssessment.criteria
+          criteria: autoAssessment.option
         },
         student: {
           id: autoAssessment.learner.user.id,
@@ -255,6 +255,75 @@ export class ConceptAutoAssessmentService {
     } catch (error) {
       console.error('Error getting concept auto-assessment details:', error);
       throw new HttpException(500, 'Internal Server Error');
+    }
+  }
+
+  // Fonction pour obtenir toutes les informations des auto-evalution pour un learner 
+
+  public async getAllAutoAssessmentsByLearner(learnerId: number) {
+    console.log("learnerID",learnerId)
+    try {
+      const autoAssessments = await this.prisma.conceptAutoAssessment.findMany({
+        where: {
+          learnerId:learnerId
+        },
+        include: {
+          learner: {
+            include: {
+              user: true,
+              classe: {
+                include: {
+                  ecole: true
+                }
+              }
+            }
+          },
+          concept: {
+            include: {
+              session: {
+                include: {
+                  syllabus: true
+                }
+              }
+            }
+          },
+          option: true
+        }
+      });
+
+      if (!autoAssessments || autoAssessments.length === 0) {
+        throw new HttpException(404, 'No auto-assessments found for this learner');
+      }
+
+      return autoAssessments.map(autoAssessment => ({
+        autoassessment: {
+          mastered: autoAssessment.mastered,
+          learnerId: autoAssessment.learnerId,
+          conceptId: autoAssessment.conceptId,
+          optionId: autoAssessment.optionId,
+          noteCritere: autoAssessment.noteCritere
+        },
+        learnerAnswerAutoEvaluation: {
+          concept: autoAssessment.concept,
+          optionId: autoAssessment.option
+        },
+        student: {
+          id: autoAssessment.learner.user.id,
+          name: autoAssessment.learner.user.name,
+          surname: autoAssessment.learner.user.surname,
+          email: autoAssessment.learner.user.email
+        },
+        class: {
+          id: autoAssessment.learner.classe?.id,
+          name: autoAssessment.learner.classe?.name
+        },
+        ecole: autoAssessment.learner.classe?.ecole,
+        session: autoAssessment.concept.session,
+        syllabus: autoAssessment.concept.session.syllabus
+      }));
+    } catch (error) {
+      console.error('Error getting all auto-assessments for learner:', error);
+      throw new HttpException(404,' No auto-assessments found for this learner');
     }
   }
 
@@ -288,7 +357,7 @@ export class ConceptAutoAssessmentService {
               }
             }
           },
-          criteria: true
+          option: true
         }
       });
 
@@ -303,7 +372,7 @@ export class ConceptAutoAssessmentService {
           mastered: assessment.mastered,
           learnerId: assessment.learnerId,
           conceptId: assessment.conceptId,
-          criteriaId: assessment.criteriaId,
+          optionId: assessment.optionId,
           noteCritere: assessment.noteCritere
         })),
         learnerAnswerAutoEvaluation: sessionAutoAssessments.map(assessment => ({
@@ -313,8 +382,8 @@ export class ConceptAutoAssessmentService {
             sessionId: assessment.concept.sessionId
           },
           criteria: {
-            id: assessment.criteria.id,
-            name: assessment.criteria.name
+            id: assessment.option.id,
+            name: assessment.option.name
           }
         })),
         student: {

@@ -8,11 +8,11 @@ export class ConceptAutoAssessmentController {
   // Auto-évaluation d'un Concept
   public createConceptAutoAssessment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { conceptId, learnerId, criteriaId } = req.query;
+      const { conceptId, learnerId, optionId } = req.query;
       const createAutoAssessmentData = await this.conceptAutoAssessmentService.saveConceptAutoAssessment(
         parseInt(conceptId as string), 
         parseInt(learnerId as string), 
-        parseInt(criteriaId as string)
+        parseInt(optionId as string)
       );
       res.status(201).json({ data: createAutoAssessmentData, message: 'created' });
     } catch (error) {
@@ -50,6 +50,20 @@ export class ConceptAutoAssessmentController {
     }
   };
 
+  // optenir toutes les auto-evalution du learner
+  public getAllAutoAssessmentsByLearner = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    console.log(req.query)
+    try {
+      const learnerId =Number(req.query.learnerId);
+      const autoAssessments = await this.conceptAutoAssessmentService.getAllAutoAssessmentsByLearner(learnerId);
+      res.status(200).json({ data: autoAssessments });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+
+
   // Obtenir les informations d'une auto-évaluation pour une session
   public getSessionAutoAssessmentDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -63,6 +77,8 @@ export class ConceptAutoAssessmentController {
       next(error);
     }
   };
+
+  
 
   // Générer un lien pour l'auto-évaluation d'une session
   public getAutoAssessmentLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

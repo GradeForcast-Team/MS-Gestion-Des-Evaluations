@@ -370,14 +370,14 @@ model ConceptAutoAssessment {
   learner    Learner  @relation(fields: [learnerId], references: [id])
   conceptId  Int
   concept    Concept  @relation(fields: [conceptId], references: [id])
-  criteriaId  Int
-  criteria    Criteria  @relation(fields: [criteriaId], references: [id])
+  optionId  Int
+  option    Options  @relation(fields: [optionId], references: [id])
   noteCritere Float
 
   @@unique([conceptId, learnerId], name: "unique_concept_assessment")
 }
 
-model Criteria {
+model Options {
   id         Int      @id @default(autoincrement())
   name   String
   conceptAutoAssessment ConceptAutoAssessment[]
@@ -392,8 +392,8 @@ model SessionAutoAssessment {
   session    Session  @relation(fields: [sessionId], references: [id])
   conceptId  Int
   concept    Concept  @relation(fields: [conceptId], references: [id])
-  criteriaId  Int
-  criteria    Criteria  @relation(fields: [criteriaId], references: [id])
+  optionId  Int
+  option    Options  @relation(fields: [optionId], references: [id])
   @@unique([sessionId, learnerId], name: "unique_session_assessment")
 }
 
