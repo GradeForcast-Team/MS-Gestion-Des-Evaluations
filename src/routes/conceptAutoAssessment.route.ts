@@ -39,7 +39,7 @@ export class ConceptAutoAssessmentRoute implements Routes {
   //  this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
   //      this.conceptAutoAssessment.getAllAutoAssessmentsByLearner); 
        this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
-        this.conceptAutoAssessment.getAllAutoAssessmentByLearnerId); 
+        this.conceptAutoAssessment.listAllAutoAssessmentsByLearnerForSession); 
 
   }
 

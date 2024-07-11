@@ -82,7 +82,7 @@ export class ConceptAutoAssessmentController {
   public getAllAutoAssessmentByLearnerId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { learnerId } = req.query;
-      const getAllAutoAssessmentByLearnerId = await this.conceptAutoAssessmentService.getAllAutoAssessmentsByLe(
+      const getAllAutoAssessmentByLearnerId = await this.conceptAutoAssessmentService.listAllAutoAssessments(
         parseInt(learnerId as string) 
       );
       res.status(200).json({ data: getAllAutoAssessmentByLearnerId });
@@ -115,6 +115,19 @@ export class ConceptAutoAssessmentController {
         parseInt(schoolId as string)
       );
       res.status(200).json({ data: linkData, message: 'Link generated' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public listAllAutoAssessmentsByLearnerForSession = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { learnerId, sessionId } = req.query;
+      const autoAssessmentDetails = await this.conceptAutoAssessmentService.listAllAutoAssessmentsByLearnerForSession(
+        parseInt(learnerId as string), 
+        parseInt(sessionId as string)
+      );
+      res.status(200).json({ data: autoAssessmentDetails });
     } catch (error) {
       next(error);
     }
