@@ -36,8 +36,11 @@ export class ConceptAutoAssessmentRoute implements Routes {
       `${this.path}/generateLink`, 
       this.conceptAutoAssessment.generateAutoAssessmentLink
     );
-    this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
-       this.conceptAutoAssessment.getAllAutoAssessmentsByLearner);
+  //  this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
+  //      this.conceptAutoAssessment.getAllAutoAssessmentsByLearner); 
+       this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
+        this.conceptAutoAssessment.getAllAutoAssessmentByLearnerId); 
 
   }
+
 }

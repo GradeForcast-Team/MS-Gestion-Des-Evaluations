@@ -78,7 +78,18 @@ export class ConceptAutoAssessmentController {
     }
   };
 
-  
+  //liste de tous les auto-evaluation du learner
+  public getAllAutoAssessmentByLearnerId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { learnerId } = req.query;
+      const getAllAutoAssessmentByLearnerId = await this.conceptAutoAssessmentService.getAllAutoAssessmentsByLe(
+        parseInt(learnerId as string) 
+      );
+      res.status(200).json({ data: getAllAutoAssessmentByLearnerId });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   // Générer un lien pour l'auto-évaluation d'une session
   public getAutoAssessmentLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
