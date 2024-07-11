@@ -100,7 +100,7 @@ export class ConceptAutoAssessmentController {
         parseInt(teacherId as string),
         parseInt(schoolId as string)
       );
-      res.status(200).json({ data: linkData, message: 'Link generated' });
+      res.status(200).json({ data: linkData });
     } catch (error) {
       next(error);
     }

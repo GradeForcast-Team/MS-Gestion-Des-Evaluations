@@ -415,7 +415,7 @@ export class ConceptAutoAssessmentService {
   }
   
   public async getAutoAssessmentLink(sessionId: number, teacherId: number, schoolId: number): Promise<any> {
-    const link = await this.generateAutoAssessmentLink(sessionId, teacherId, schoolId);
+    // const link = await this.generateAutoAssessmentLink(sessionId, teacherId, schoolId);
   
     const session = await this.prisma.session.findUnique({
       where: { id: sessionId },
@@ -464,7 +464,7 @@ export class ConceptAutoAssessmentService {
     }
   
     return {
-      link: link,
+      // link: link,
       session: {
         id: session.id,
         name: session.name,
