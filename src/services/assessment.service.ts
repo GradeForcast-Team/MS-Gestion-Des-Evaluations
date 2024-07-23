@@ -199,8 +199,10 @@ export class AssessmentService {
   //     throw new HttpException(500, 'Internal Server Error');
   //   }
   // }
+  
   public async getLink(learnerId: number, conceptId: number) {
     try {
+      // Récupérer les quizzes associés au concept
       const quizzes = await this.prisma.quiz.findMany({
         where: { conceptId },
         include: {
@@ -230,6 +232,7 @@ export class AssessmentService {
   
       if (quizzes.length === 0) throw new HttpException(404, 'No quizzes found for this concept');
   
+      // Détails des quizzes
       const detailedQuizzes = quizzes.map(quiz => {
         return {
           ...quiz,
@@ -239,41 +242,60 @@ export class AssessmentService {
               propositions: question.propositions,
               answer: question.answer
             };
-          }),
-          concept: {
-            ...quiz.concept,
-            session: {
-              ...quiz.concept.session,
-              syllabus: {
-                ...quiz.concept.session.syllabus,
-                teacher: {
-                  id: quiz.concept.session.syllabus.teacher.id,
-                  name: quiz.concept.session.syllabus.teacher.user.name,
-                  surname: quiz.concept.session.syllabus.teacher.user.surname,
-                  email: quiz.concept.session.syllabus.teacher.user.email,
-                }
-              }
-            }
-          }
+          })
         };
       });
   
-      // Fetch the learner's class and school information
+      // Récupérer les informations du concept, de la session, du syllabus et de l'enseignant
+      const concept = quizzes[0].concept;
+      const session = concept.session;
+      const syllabus = session.syllabus;
+      const teacher = syllabus.teacher;
+  
+      // Récupérer les informations de l'apprenant, de sa classe et de son école
       const learner = await this.prisma.learner.findUnique({
         where: { id: learnerId },
         include: {
+          user: true,
           classe: {
-            include: { ecole: true }
-          }
-        }
+            include: {
+              ecole: true,
+            },
+          },
+        },
       });
   
       if (!learner) throw new HttpException(404, 'Learner not found');
   
+      // Préparer la réponse avec toutes les informations demandées
       const response = {
-        detailedQuizzes,
+        learner: {
+          id: learner.id,
+          name: learner.user.name,
+          surname: learner.user.surname,
+          email: learner.user.email,
+        },
         class: learner.classe,
         school: learner.classe?.ecole,
+        detailedQuizzes,
+        concept: {
+          id: concept.id,
+          name: concept.name,
+        },
+        session: {
+          id: session.id,
+          name: session.name,
+        },
+        syllabus: {
+          id: syllabus.id,
+          name: syllabus.name,
+          teacher: {
+            id: teacher.id,
+            name: teacher.user.name,
+            surname: teacher.user.surname,
+            email: teacher.user.email,
+          }
+        }
       };
   
       return response;
@@ -282,6 +304,7 @@ export class AssessmentService {
       throw new HttpException(500, 'Internal Server Error');
     }
   }
+  
   
 
   // generer le lien de l'evaluation
