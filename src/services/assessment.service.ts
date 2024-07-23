@@ -9,6 +9,10 @@ import NodeCache from 'node-cache';
 export class AssessmentService {
   public quizzService = Container.get(QuizzService);
   public conceptAutoAssessment = Container.get(ConceptAutoAssessmentService);
+  // private prisma = new PrismaClient();
+  // private prisma = new PrismaClient({
+  //   log: ['query', 'info', 'warn', 'error']
+  // });
   private prisma = new PrismaClient();
   private quizz = this.prisma.quiz;
   private learnerAnswer = this.prisma.learnerAnswer;
@@ -477,6 +481,7 @@ public clearCache(key: string): void {
 //   });
 // }
 
+// liste des evaluations pour un concept
 public async getQuizDetails(learnerId: number, conceptId: number) {
   const cacheKey = `quizDetails-${learnerId}-${conceptId}`;
   return this.getOrSetCache(cacheKey, async () => {
@@ -532,7 +537,7 @@ public async getQuizDetails(learnerId: number, conceptId: number) {
       // Get the class of the specified learner
       const learner = await this.prisma.learner.findUnique({
         where: { id: learnerId },
-        include: { classe: true }
+        include: { classe: { include: { ecole: true } } }
       });
 
       if (!learner) {
@@ -540,12 +545,20 @@ public async getQuizDetails(learnerId: number, conceptId: number) {
       }
 
       const classId = learner.classeId;
+      const classInfo = learner.classe;
+      const schoolInfo = learner.classe?.ecole;
 
       // Get all learners in the same class
       const learnersInClass = await this.prisma.learner.findMany({
         where: { classeId: classId },
         select: { id: true }
       });
+
+      // Extract syllabus, teacher, and session info from the first quiz
+      const firstQuiz = quizzes[0];
+      const syllabus = firstQuiz.concept.session.syllabus;
+      const teacher = syllabus.teacher.user;
+      const session = firstQuiz.concept.session;
 
       // Calculate the learner's score and details
       let totalLearnerScore = 0;
@@ -570,15 +583,6 @@ public async getQuizDetails(learnerId: number, conceptId: number) {
             learnerAnswer,
             correctAnswer,
             isCorrect,
-            class: learnerAnswer?.learner.classe,
-            ecole: learnerAnswer?.learner.classe?.ecole,
-            syllabus: quiz.concept.session.syllabus,
-            teacher: {
-              id: quiz.concept.session.syllabus.teacher.id,
-              name: quiz.concept.session.syllabus.teacher.user.name,
-              surname: quiz.concept.session.syllabus.teacher.user.surname,
-              email: quiz.concept.session.syllabus.teacher.user.email,
-            }
           };
         });
 
@@ -622,6 +626,24 @@ public async getQuizDetails(learnerId: number, conceptId: number) {
 
       return {
         detailedQuizzes,
+        syllabus: {
+          id: syllabus.id,
+          name: syllabus.name,
+        },
+        teacher: {
+          id: teacher.id,
+          name: teacher.name,
+          surname: teacher.surname,
+          email: teacher.email,
+        },
+        class: classInfo,
+        session: {
+          id: session.id,
+          name: session.name,
+          startDate: session.startDate,
+          endDate: session.endDate,
+        },
+        school: schoolInfo,
         learnerScore: learnerScorePercentage,
         classScore: classScorePercentage,
         scoreDifference
@@ -632,5 +654,195 @@ public async getQuizDetails(learnerId: number, conceptId: number) {
     }
   });
 }
+
+
+
+
+public async getAllQuizDetails(learnerId: number) {
+   // Récupérer les informations de l'apprenant, de son école, de sa classe et de ses enseignants
+   const learner = await this.prisma.learner.findUnique({
+    where: { id: learnerId },
+    include: {
+      user: true,
+      classe: {
+        include: {
+          ecole: true,
+        },
+      },
+    },
+  });
+
+  if (!learner) {
+    throw new HttpException(404, 'Learner not found');
+  }
+
+  if (!learner) {
+    throw new HttpException(404, 'Learner not found');
+  }
+
+  // Récupérer tous les quiz auxquels l'apprenant a répondu
+  const learnerQuizzes = await this.prisma.learnerAnswer.findMany({
+    where: { learnerId },
+    select: { quizId: true },
+    distinct: ['quizId'],
+  });
+
+  // Calculer les scores pour chaque quiz
+  const quizScores = await Promise.all(
+    learnerQuizzes.map(async (quiz) => {
+      const scorePercentage = await this.calculateLearnerScore(learnerId, quiz.quizId);
+      return { quizId: quiz.quizId, scorePercentage };
+    })
+  );
+
+  // Récupérer les concepts et les sessions associés
+  const conceptScores = {};
+  const detailedConcepts = [];
+  for (const { quizId } of learnerQuizzes) {
+    const quiz = await this.prisma.quiz.findUnique({
+      where: { id: quizId },
+      include: {
+        concept: {
+          include: {
+            session: {
+              include: {
+                syllabus: {
+                  include: {
+                    teacher: {
+                      include: { user: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (quiz && quiz.concept) {
+      const conceptId = quiz.concept.id;
+      const session = quiz.concept.session;
+      if (!conceptScores[conceptId]) {
+        conceptScores[conceptId] = { score: 0, totalQuestions: 0, sessionId: session.id };
+      }
+      conceptScores[conceptId].score += quizScores.find((qs) => qs.quizId === quizId)?.scorePercentage || 0;
+      conceptScores[conceptId].totalQuestions += 1;
+
+      detailedConcepts.push({
+        conceptId,
+        conceptName: quiz.concept.name,
+        session: {
+          sessionId: session.id,
+          sessionName: session.name,
+          syllabus: {
+            syllabusId: session.syllabus.id,
+            syllabusName: session.syllabus.name,
+            teacher: {
+              teacherId: session.syllabus.teacher.id,
+              teacherName: session.syllabus.teacher.user.name,
+            },
+          },
+        },
+      });
+    }
+  }
+
+  // Calculer les scores des sessions
+  const sessionScores = {};
+  for (const conceptId in conceptScores) {
+    const concept = conceptScores[conceptId];
+    if (!sessionScores[concept.sessionId]) {
+      sessionScores[concept.sessionId] = { score: 0, totalConcepts: 0 };
+    }
+    sessionScores[concept.sessionId].score += (concept.score / concept.totalQuestions);
+    sessionScores[concept.sessionId].totalConcepts += 1;
+  }
+
+  for (const sessionId in sessionScores) {
+    sessionScores[sessionId].scorePercentage = (sessionScores[sessionId].score / sessionScores[sessionId].totalConcepts);
+  }
+
+  // Récupérer toutes les réponses de l'apprenant
+  const learnerAnswers = await this.prisma.learnerAnswer.findMany({
+    where: { learnerId },
+    include: {
+      proposition: {
+        include: {
+          question: true,
+        },
+      },
+    },
+  });
+
+  // Préparer la réponse avec toutes les informations demandées
+  const response = {
+    learner,
+    school: learner.classe?.ecole,
+    quizScores,
+    concepts: Object.keys(conceptScores).map((conceptId) => ({
+      conceptId,
+      ...conceptScores[conceptId],
+      scorePercentage: (conceptScores[conceptId].score / conceptScores[conceptId].totalQuestions),
+    })),
+    sessions: Object.keys(sessionScores).map((sessionId) => ({
+      sessionId,
+      ...sessionScores[sessionId],
+    })),
+    learnerAnswers,
+    detailedConcepts,
+  };
+
+  return response;
+}
+
+public async calculateTotalLearnerScores(learnerId: number) {
+  // Récupérer tous les quiz auxquels l'apprenant a répondu
+  const learnerQuizzes = await this.prisma.learnerAnswer.findMany({
+    where: { learnerId },
+    select: { quizId: true },
+    distinct: ['quizId']
+  });
+
+  const scores = await Promise.all(
+    learnerQuizzes.map(async (quiz) => {
+      const scorePercentage = await this.calculateLearnerScore(learnerId, quiz.quizId);
+      return { quizId: quiz.quizId, scorePercentage };
+    })
+  );
+
+  return scores;
+}
+
+public async calculateLearnerScore(learnerId: number, quizId: number) {
+  const learnerAnswers = await this.prisma.learnerAnswer.findMany({
+    where: { learnerId, quizId },
+    include: {
+      proposition: { include: { question: true } },
+    },
+  });
+
+  let score = 0;
+
+  for (const answer of learnerAnswers) {
+    const correctAnswer = await this.prisma.answer.findFirst({ where: { questionId: answer.questionId } });
+
+    if (correctAnswer && answer.proposition.numbQuestion === correctAnswer.valeur) {
+      score++;
+    }
+  }
+
+  const totalQuestions = await this.prisma.question.count({ where: { quizId } });
+  const scorePercentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+
+  return scorePercentage;
+}
+
+
+
+
+
+
+
 
 }

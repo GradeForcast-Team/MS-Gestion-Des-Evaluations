@@ -38,8 +38,10 @@ export class ConceptAutoAssessmentRoute implements Routes {
     );
   //  this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
   //      this.conceptAutoAssessment.getAllAutoAssessmentsByLearner); 
-       this.router.get(`${this.path}/getAllAutoAssessmentsByLearner`,
+       this.router.get(`${this.path}/getAllAutoAssessmentsByLearnerForSession`,
         this.conceptAutoAssessment.listAllAutoAssessmentsByLearnerForSession); 
+        this.router.get(`${this.path}/getAllAutoAssessmentByLearnerId`,
+          this.conceptAutoAssessment.getAllAutoAssessmentByLearnerId); 
 
   }
 

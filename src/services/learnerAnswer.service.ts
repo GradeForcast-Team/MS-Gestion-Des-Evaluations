@@ -20,7 +20,7 @@ export class LearnerAnswerService {
       throw new HttpException(409, 'Quiz does not exist');
     }
   
-    // Vérifiez l'existence de chaque question et proposition et assurez-vous que chaque question appartient bien au quiz
+    // Vérifiez l'existence de chaque question et assurez-vous que chaque question appartient bien au quiz
     await Promise.all(learnerAnswers.map(async (learnerAnswer) => {
       const existingQuestion = await this.prisma.question.findFirst({
         where: {
@@ -32,35 +32,48 @@ export class LearnerAnswerService {
       if (!existingQuestion) {
         throw new HttpException(409, `Question with id ${learnerAnswer.questionId} does not exist or does not belong to the specified quiz`);
       }
-  
-      // const existingProposition = await this.prisma.proposition.findFirst({
-      //   where: {
-      //     id: learnerAnswer.propositionId,
-      //     questionId: learnerAnswer.questionId,  // Assurez-vous que la proposition appartient bien à la question
-      //   },
-      // });
-  
-      // if (!existingProposition) {
-      //   throw new HttpException(409, `Proposition with id ${learnerAnswer.propositionId} does not exist or does not belong to the specified question`);
-      // }
     }));
   
-    // Créez les réponses de l'apprenant dans une transaction
-    const reponsesCrees = await this.prisma.$transaction(
-      learnerAnswers.map(answer => 
-        this.prisma.learnerAnswer.create({
+    // Créez ou mettez à jour les réponses de l'apprenant
+    const reponsesCrees: LearnerAnswer[] = [];
+    
+    for (const answer of learnerAnswers) {
+      const existingAnswer = await this.prisma.learnerAnswer.findFirst({
+        where: {
+          learnerId: learnerId,
+          quizId: quizzId,
+          questionId: answer.questionId,
+        },
+      });
+  
+      if (existingAnswer) {
+        // Mettre à jour l'ancienne réponse avec la nouvelle valeur
+        const updatedAnswer = await this.prisma.learnerAnswer.update({
+          where: {
+            id: existingAnswer.id,
+          },
+          data: {
+            propositionId: answer.propositionId,
+          },
+        });
+        reponsesCrees.push(updatedAnswer);
+      } else {
+        // Créer une nouvelle réponse
+        const newAnswer = await this.prisma.learnerAnswer.create({
           data: {
             learnerId: learnerId,
             quizId: quizzId,
             questionId: answer.questionId,
             propositionId: answer.propositionId,
           },
-        })
-      )
-    );
+        });
+        reponsesCrees.push(newAnswer);
+      }
+    }
   
     return reponsesCrees;
   }
+  
   
 
 

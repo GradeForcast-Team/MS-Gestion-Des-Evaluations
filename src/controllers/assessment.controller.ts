@@ -64,4 +64,15 @@ export class AssessmentController {
       next(error);
     }
   };
+
+  public getAllInfoDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const learnerId = Number(req.query.learnerId);
+      const evaluationDetails = await this.assessment.getAllQuizDetails(learnerId);
+      res.status(200).json({ data: evaluationDetails });
+    } catch (error) {
+      next(error);
+    }
+  };
+  
 }

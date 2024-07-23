@@ -89,6 +89,7 @@ model TypeSchools {
   name          String        @unique
   schools       Schools[]
   periode   Periode[]
+  niveau Niveau[]
 }
 
 model Schools {
@@ -112,13 +113,22 @@ model TeacherSchools{
 model Classe {
   id          Int       @id @default(autoincrement())
   name         String
-  ecole       Schools   @relation(fields: [ecoleId], references: [id])
-  ecoleId     Int
+  ecole       Schools?   @relation(fields: [ecoleId], references: [id])
+  ecoleId     Int?
   teachers   TeacherClasse[]
   learners  Learner[]
   syllabusClasse SyllabusClasse[] 
+  niveau       Niveau   @relation(fields: [niveauId], references: [id])
+  niveauId     Int
 }
 
+model Niveau {
+   id          Int       @id @default(autoincrement())
+  name         String
+  classe Classe[]
+   typeSchoolId  Int
+  typeSchool   TypeSchools @relation(fields: [typeSchoolId], references: [id])
+}
 model TeacherClasse {
   teacherId Int
   classeId  Int

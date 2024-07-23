@@ -41,7 +41,7 @@ export class SessionService {
           create: sessionData.concepts.map(concepts => ({
             name: concepts.name,
             quizzes: {
-              create: concepts.quizz.map(quiz => ({
+              create: concepts.quizzes.map(quiz => ({
                 name: quiz.name,
                 questions: {
                   create: quiz.questions.map(question => {
@@ -233,7 +233,7 @@ export class SessionService {
           create: sessionData.concepts.map(concepts => ({
             name: concepts.name,
             quizzes: {
-              create: concepts.quizz.map(quiz => ({
+              create: concepts.quizzes.map(quiz => ({
                 name: quiz.name,
                 questions: {
                   create: quiz.questions.map(question => {

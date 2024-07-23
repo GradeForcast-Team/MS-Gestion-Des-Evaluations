@@ -16,6 +16,6 @@ export class AssessmentRoute implements Routes {
     this.router.get(`${this.path}/concept`, this.assessmentController.AssessmentConceptLearner);
     this.router.get(`${this.path}/session`, this.assessmentController.AssessmentConceptLearnerForSession);
     this.router.get(`${this.path}/getLink`, this.assessmentController.getLink);
-    this.router.get(`${this.path}/getAllInfo`, this.assessmentController.getAllInfo);
+    this.router.get(`${this.path}/getAllInfoDetails`, this.assessmentController.getAllInfoDetails);
   }
 }

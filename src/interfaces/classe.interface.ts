@@ -7,6 +7,7 @@ export interface Classe {
   id: number;
   name: string;
   ecoleId: number;
+  niveauId: number;
   teachers: number[];
   learners: number[];
 }

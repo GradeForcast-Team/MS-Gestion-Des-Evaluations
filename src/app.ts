@@ -12,6 +12,8 @@ import { logger, stream } from '@utils/logger';
 import {AuthController} from "@controllers/auth.controller";
 import dotenv from 'dotenv';
 import * as process from "process";
+import { Server as SocketServer } from 'socket.io';
+import { ClasseService } from './services/classe.service';
 dotenv.config();
 export class App {
   public app: express.Application;
@@ -19,16 +21,17 @@ export class App {
   public port: string | number;
   public auth = new AuthController();
   public http: any;
-  public io: any;
+  public io: SocketServer;
   // public passport = require('passport');
   constructor(routes: Routes[]) {
     this.app = express();
     this.env = process.env.NODE_ENV;
     this.port = process.env.PORT;
     this.http = require('http').createServer(this.app);
-    this.io = require('socket.io')(this.http, {
+    this.io = new SocketServer(this.http, {
       cors: {
         origin: '*',
+        methods: ['GET', 'POST']
       },
     });
 
@@ -36,6 +39,7 @@ export class App {
     this.initializeRoutes(routes);
     this.initializeErrorHandling();
     this.initializeUploadsFolder();
+    this.initializeSocket();
   }
 
   private initializeUploadsFolder() {
@@ -71,7 +75,7 @@ export class App {
     this.app.use(cookieParser());
   }
 
-  private initializeRoutes(routes: Routes[]) {
+  public initializeRoutes(routes: Routes[]) {
     routes.forEach(route => {
       this.app.use('/api', route.router);
     });
@@ -96,5 +100,19 @@ export class App {
   private initializeErrorHandling() {
     this.app.use(ErrorMiddleware);
   }
+  public initializeSocket() {
+    this.io.on('connection', async (socket) => {
+      logger.info('New client connected');
+      
+      // Envoyer la liste des classes actuelle lors de la connexion
+      const classes = await new ClasseService(this.io).getAllClasse();
+      socket.emit('classList', classes);
+      
+      socket.on('disconnect', () => {
+        logger.info('Client disconnected');
+      });
+    });
+  }
+  
 }
 

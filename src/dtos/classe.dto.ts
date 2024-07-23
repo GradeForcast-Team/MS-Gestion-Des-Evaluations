@@ -13,6 +13,11 @@ export class CreateClasseDto {
   @IsInt()
   ecoleId: number;
 
+  
+  @IsNotEmpty()
+  @IsInt()
+  niveauId: number;
+
   @IsNotEmpty()
   @IsInt({ each: true })
   @Type(() => Number)
