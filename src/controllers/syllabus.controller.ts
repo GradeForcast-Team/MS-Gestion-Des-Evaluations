@@ -37,7 +37,7 @@ export class SyllabusController {
   public getAllSyllabusForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const professorId = Number(req.params.id);
-      const getAllSyllabusForTeacher = await this.syllabusService.geAllSyllabusForTeacher(professorId);
+      const getAllSyllabusForTeacher = await this.syllabusService.getSyllabusWithClassesForTeacher(professorId);
       res.status(200).json({ data: getAllSyllabusForTeacher });
     } catch (error) {
       next(error);

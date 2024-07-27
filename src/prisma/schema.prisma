@@ -194,28 +194,29 @@ model Role {
 
 model Syllabus {
   id                   Int       @id @default(autoincrement())
-  teacher       Teacher? @relation(fields: [teacherId], references: [id])     // Une note est enregistrée par un seul enseignant
-  teacherId     Int
-  name                 String @unique
+  teacher              Teacher?  @relation(fields: [teacherId], references: [id])
+  teacherId            Int
+  name                 String    @unique
   nbhr                 Int
   creditCoef           Float?
   courseDescription    String
   generalObjective     String?
-  specificObjective  String?
-  pedagogicalMethod pedagogicalMethod? @relation(fields: [methodeId], references: [id])
-  educationalSupport SupportsPedagogiques? @relation(fields: [supportId], references: [id])
-  evaluationMode      evaluationMode? @relation(fields: [modeId], references: [id])
-  methodeId Int?
-  supportId Int?
-  modeId Int?
-  session Session[]
-  academicYear  AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
-  academicYearId Int
-  notereel Note[]
-  bibliography Bibliography[]
-  periode       Periode? @relation(fields: [periodeId], references: [id])     
-  periodeId     Int
-  syllabusClasse SyllabusClasse[] 
+  specificObjective    String?
+  pedagogicalMethod    pedagogicalMethod? @relation(fields: [methodeId], references: [id])
+  educationalSupport   SupportsPedagogiques? @relation(fields: [supportId], references: [id])
+  evaluationMode       evaluationMode? @relation(fields: [modeId], references: [id])
+  methodeId            Int?
+  supportId            Int?
+  modeId               Int?
+  session              Session[]
+  academicYear         AcademicYear @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  academicYearId       Int
+  notereel             Note[]
+  bibliography         Bibliography[]
+  periode              Periode? @relation(fields: [periodeId], references: [id])
+  periodeId            Int
+  syllabusClasse       SyllabusClasse[]
+  status               String    @default("not assigned")
 }
 
 model SyllabusClasse {

@@ -12,7 +12,7 @@ type ConceptScore = {
   totalQuestions: number;
   sessionId: number;
   conceptName: string;
-  sessionName: string; // Ajouter cette ligne pour inclure le nom de la session
+  sessionName: string;// Ajouter cette ligne pour inclure le nom de la session
 };
 
 type SessionScore = {
@@ -903,7 +903,13 @@ public async getAllQuizDetails(learnerId: number) {
       const conceptId = quiz.concept.id;
       const session = quiz.concept.session;
       if (!conceptScores[conceptId]) {
-        conceptScores[conceptId] = { score: 0, totalQuestions: 0, sessionId: session.id, conceptName: quiz.concept.name, sessionName: session.name };
+        conceptScores[conceptId] = {
+          score: 0,
+          totalQuestions: 0,
+          sessionId: session.id,
+          conceptName: quiz.concept.name,
+          sessionName: session.name,
+        };
       }
       conceptScores[conceptId].score += quizScores.find((qs) => qs.quizId === quizId)?.scorePercentage || 0;
       conceptScores[conceptId].totalQuestions += 1;
@@ -914,7 +920,11 @@ public async getAllQuizDetails(learnerId: number) {
   for (const conceptId in conceptScores) {
     const concept = conceptScores[conceptId];
     if (!sessionScores[concept.sessionId]) {
-      sessionScores[concept.sessionId] = { score: 0, totalConcepts: 0, sessionName: concept.sessionName };
+      sessionScores[concept.sessionId] = {
+        score: 0,
+        totalConcepts: 0,
+        sessionName: concept.sessionName,
+      };
     }
     sessionScores[concept.sessionId].score += (concept.score / concept.totalQuestions);
     sessionScores[concept.sessionId].totalConcepts += 1;
@@ -935,18 +945,33 @@ public async getAllQuizDetails(learnerId: number) {
     }));
 
     const sessionName = sessionScores[sessionId].sessionName;
+    const firstSessionConcept = sessionConcepts[0];
+    const syllabus = await this.prisma.syllabus.findUnique({
+      where: { id: firstSessionConcept.sessionId },
+      include: {
+        teacher: {
+          include: { user: true },
+        },
+      },
+    });
 
     evaluations.push({
       class: learner.classe,
       school: learner.classe?.ecole,
       detailleQuizz,
       session: { id: sessionId, name: sessionName },
+      score: sessionScores[sessionId].scorePercentage,
+      syllabus: syllabus,
+      teacher: syllabus?.teacher?.user,
     });
   }
 
   const response = {
     learner,
     evaluations,
+    quizScores,
+    sessionScores,
+    conceptScores,
   };
 
   return response;
@@ -1030,7 +1055,6 @@ public async calculateLearnerScore(learnerId: number, quizId: number): Promise<n
 
   return scorePercentage;
 }
-
 
 public async calculateTotalLearnerScores(learnerId: number) {
   // Récupérer tous les quiz auxquels l'apprenant a répondu

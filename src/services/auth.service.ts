@@ -73,10 +73,13 @@ export class AuthService {
     }
   }
 
-  public async loginTeacher(userData: CreateUserDto): Promise<{ findUser: User; tokenData: TokenData }> {
+  public async loginTeacher(userData: CreateUserDto){
     try {
-      // Recherche de l'utilisateur par email
-      const findUser: User | null = await this.prisma.user.findUnique({ where: { email: userData.email } });
+      // Recherche de l'utilisateur par email avec les données de l'enseignant
+      const findUser = await this.prisma.user.findUnique({
+        where: { email: userData.email },
+        include: { teacher: true }  // Inclure les données de l'enseignant
+      });
 
       // Vérification de l'utilisateur
       if (!findUser) throw new HttpException(409, `This email ${userData.email} was not found`);
