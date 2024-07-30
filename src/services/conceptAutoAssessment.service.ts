@@ -515,117 +515,10 @@ export class ConceptAutoAssessmentService {
     return concept;
   }
 
-  // Liste de tous les auto-Evaluation d'un learner
-  // public async listAllAutoAssessments(learnerId: number) {
-  //   await this.validateLearner(learnerId);
-
-  //   const autoAssessments = await this.prisma.conceptAutoAssessment.findMany({
-  //     where: { learnerId },
-  //     include: {
-  //       learner: {
-  //         include: {
-  //           user: true,
-  //           classe: {
-  //             include: {
-  //               ecole: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //       concept: {
-  //         include: {
-  //           session: {
-  //             include: {
-  //               syllabus: {
-  //                 include: {
-  //                   teacher: {
-  //                     include: {
-  //                       user: true,
-  //                     },
-  //                   },
-  //                   syllabusClasse: {
-  //                     include: {
-  //                       classe: {
-  //                         include: {
-  //                           ecole: true,
-  //                         },
-  //                       },
-  //                     },
-  //                   },
-  //                 },
-  //               },
-  //               concept: true,  // Ajouter cette ligne pour inclure les concepts dans la session
-  //             },
-  //           },
-  //         },
-  //       },
-  //       option: true,
-  //     },
-  //   });
-
-  //   if (autoAssessments.length === 0) {
-  //     throw new HttpException(404, 'No auto-assessments found for this learner');
-  //   }
-
-  //   return autoAssessments.map(autoAssessment => ({
-  //     autoassessment: {
-  //       mastered: autoAssessment.mastered,
-  //       learnerId: autoAssessment.learnerId,
-  //       conceptId: autoAssessment.conceptId,
-  //       optionId: autoAssessment.optionId,
-  //       noteCritere: autoAssessment.noteCritere,
-  //     },
-  //     learnerAnswerAutoEvaluation: {
-  //       concept: autoAssessment.concept,
-  //       criteria: autoAssessment.option,
-  //     },
-  //     student: {
-  //       id: autoAssessment.learner.user.id,
-  //       name: autoAssessment.learner.user.name,
-  //       surname: autoAssessment.learner.user.surname,
-  //       email: autoAssessment.learner.user.email,
-  //     },
-  //     class: {
-  //       id: autoAssessment.learner.classe?.id,
-  //       name: autoAssessment.learner.classe?.name,
-  //     },
-  //     ecole: autoAssessment.learner.classe?.ecole,
-  //     session: {
-  //       id: autoAssessment.concept.session.id,
-  //       name: autoAssessment.concept.session.name,
-  //       startDate: autoAssessment.concept.session.startDate,
-  //       endDate: autoAssessment.concept.session.endDate,
-  //       concepts: autoAssessment.concept.session.concept.map((concept) => ({
-  //         id: concept.id,
-  //         name: concept.name,
-  //       })),
-  //     },
-  //     syllabus: {
-  //       id: autoAssessment.concept.session.syllabus.id,
-  //       name: autoAssessment.concept.session.syllabus.name,
-  //       teacher: {
-  //         id: autoAssessment.concept.session.syllabus.teacher.id,
-  //         name: autoAssessment.concept.session.syllabus.teacher.user.name,
-  //         surname: autoAssessment.concept.session.syllabus.teacher.user.surname,
-  //         email: autoAssessment.concept.session.syllabus.teacher.user.email,
-  //       },
-  //       school: {
-  //         id: autoAssessment.learner.classe?.ecole.id,
-  //         name: autoAssessment.learner.classe?.ecole.name,
-  //         telephone: autoAssessment.learner.classe?.ecole.telephone,
-  //       },
-  //       classe: {
-  //         id: autoAssessment.learner.classe?.id,
-  //         name: autoAssessment.learner.classe?.name,
-  //       }
-  //     },
-  //   }));
-  // }
-
   public async listAllAutoAssessments(learnerId: number) {
     await this.validateLearner(learnerId);
   
-    const autoAssessments = await this.prisma.conceptAutoAssessment.findMany({
+    const autoEvaluations = await this.prisma.conceptAutoAssessment.findMany({
       where: { learnerId },
       include: {
         learner: {
@@ -660,16 +553,20 @@ export class ConceptAutoAssessmentService {
       },
     });
   
-    if (autoAssessments.length === 0) {
+    if (autoEvaluations.length === 0) {
       throw new HttpException(404, 'No auto-assessments found for this learner');
     }
   
-    const sessionScores = autoAssessments.reduce((acc, assessment) => {
+    const sessionScores = autoEvaluations.reduce((acc, assessment) => {
       const sessionId = assessment.concept.session.id;
       const note = assessment.noteCritere;
   
       if (!acc[sessionId]) {
-        acc[sessionId] = { totalNote: 0, count: 0, totalConcepts: assessment.concept.session.concept.length };
+        acc[sessionId] = {
+          totalNote: 0,
+          count: 0,
+          totalConcepts: assessment.concept.session.concept.length,
+        };
       }
   
       acc[sessionId].totalNote += note;
@@ -691,67 +588,83 @@ export class ConceptAutoAssessmentService {
     });
   
     const response = {
-      data: autoAssessments.map(autoAssessment => {
-        const sessionScore = sessionsWithScores.find(score => score.sessionId === autoAssessment.concept.session.id)?.sessionScore;
-  
-        return {
-          autoassessment: {
-            mastered: autoAssessment.mastered,
-            learnerId: autoAssessment.learnerId,
-            conceptId: autoAssessment.conceptId,
-            optionId: autoAssessment.optionId,
-            noteCritere: autoAssessment.noteCritere,
+      data: {
+        learner: {
+          id: autoEvaluations[0].learner.id,
+          user: {
+            id: autoEvaluations[0].learner.user.id,
+            name: autoEvaluations[0].learner.user.name,
+            surname: autoEvaluations[0].learner.user.surname,
+            email: autoEvaluations[0].learner.user.email,
           },
-          learnerAnswerAutoEvaluation: {
-            concept: autoAssessment.concept,
-            option: autoAssessment.option,
-          },
-          student: {
-            id: autoAssessment.learner.user.id,
-            name: autoAssessment.learner.user.name,
-            surname: autoAssessment.learner.user.surname,
-            email: autoAssessment.learner.user.email,
-          },
-          class: {
-            id: autoAssessment.learner.classe?.id,
-            name: autoAssessment.learner.classe?.name,
-          },
-          session: {
-            id: autoAssessment.concept.session.id,
-            name: autoAssessment.concept.session.name,
-            startDate: autoAssessment.concept.session.startDate,
-            endDate: autoAssessment.concept.session.endDate,
-            concepts: autoAssessment.concept.session.concept.map(concept => ({
-              id: concept.id,
-              name: concept.name,
-            })),
-            sessionScore,
-          },
-        };
-      }),
-      syllabus: {
-        id: autoAssessments[0].concept.session.syllabus.id,
-        name: autoAssessments[0].concept.session.syllabus.name,
-        teacher: {
-          id: autoAssessments[0].concept.session.syllabus.teacher.id,
-          name: autoAssessments[0].concept.session.syllabus.teacher.user.name,
-          surname: autoAssessments[0].concept.session.syllabus.teacher.user.surname,
-          email: autoAssessments[0].concept.session.syllabus.teacher.user.email,
+          est_membre: autoEvaluations[0].learner.est_membre,
+          classe: autoEvaluations[0].learner.classe ? {
+            id: autoEvaluations[0].learner.classe.id,
+            name: autoEvaluations[0].learner.classe.name,
+          } : null,
+          school: autoEvaluations[0].learner.classe?.ecole ? {
+            id: autoEvaluations[0].learner.classe.ecole.id,
+            name: autoEvaluations[0].learner.classe.ecole.name,
+            telephone: autoEvaluations[0].learner.classe.ecole.telephone,
+          } : null,
         },
-      },
-      school: {
-        id: autoAssessments[0].learner.classe?.ecole.id,
-        name: autoAssessments[0].learner.classe?.ecole.name,
-        telephone: autoAssessments[0].learner.classe?.ecole.telephone,
-      },
-      class: {
-        id: autoAssessments[0].learner.classe?.id,
-        name: autoAssessments[0].learner.classe?.name,
-      },
+        listeAutoAssessments: autoEvaluations.map(autoAssessment => {
+          const sessionScore = sessionsWithScores.find(score => score.sessionId === autoAssessment.concept.session.id)?.sessionScore;
+  
+          return {
+            autoAssessment: {
+              mastered: autoAssessment.mastered,
+              noteCritere: autoAssessment.noteCritere,
+              critereAttribue: autoAssessment.option.name,
+            },
+            concept: {
+              id: autoAssessment.concept.id,
+              name: autoAssessment.concept.name,
+            },
+            session: {
+              id: autoAssessment.concept.session.id,
+              name: autoAssessment.concept.session.name,
+              sessionScore,
+            },
+            classe: {
+              id: autoAssessment.learner.classe?.id,
+              name: autoAssessment.learner.classe?.name,
+            },
+            syllabus: autoAssessment.concept.session.syllabus ? {
+              id: autoAssessment.concept.session.syllabus.id,
+              name: autoAssessment.concept.session.syllabus.name,
+              teacher: {
+                id: autoAssessment.concept.session.syllabus.teacher.id,
+                name: autoAssessment.concept.session.syllabus.teacher.user.name,
+                surname: autoAssessment.concept.session.syllabus.teacher.user.surname,
+                email: autoAssessment.concept.session.syllabus.teacher.user.email,
+              },
+            } : null,
+          };
+        }),
+        classe: {
+          id: autoEvaluations[0].learner.classe?.id,
+          name: autoEvaluations[0].learner.classe?.name,
+        },
+        school: autoEvaluations[0].learner.classe?.ecole ? {
+          id: autoEvaluations[0].learner.classe.ecole.id,
+          name: autoEvaluations[0].learner.classe.ecole.name,
+          telephone: autoEvaluations[0].learner.classe.ecole.telephone,
+        } : null,
+        teacher: {
+          id: autoEvaluations[0].concept.session.syllabus.teacher.id,
+          name: autoEvaluations[0].concept.session.syllabus.teacher.user.name,
+          surname: autoEvaluations[0].concept.session.syllabus.teacher.user.surname,
+          email: autoEvaluations[0].concept.session.syllabus.teacher.user.email,
+        },
+      }
     };
   
     return response;
   }
+  
+  
+
   
 
   public async listAllAutoAssessmentsByLearnerForSession(learnerId: number, sessionId: number) {

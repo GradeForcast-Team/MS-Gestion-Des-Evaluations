@@ -14,6 +14,7 @@ export class SchoolRoute implements Routes {
   private initializeRoutes() {
     this.router.get(`${this.path}/all`, this.schoolController.getSchool);
     this.router.get(`${this.path}`, this.schoolController.getSchoolById);
+    this.router.get(`${this.path}/schoolByTeacher`, this.schoolController.getSchoolsAndLevelsForTeacher);
     this.router.post(`${this.path}/create`, this.schoolController.createSchools);
     this.router.put(`${this.path}/update`, this.schoolController.updateSchools);
     this.router.delete(`${this.path}/delete`, this.schoolController.deleteSchools);

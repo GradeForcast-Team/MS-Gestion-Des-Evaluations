@@ -66,4 +66,14 @@ export class SchoolController {
       next(error);
     }
   };
+
+  public getSchoolsAndLevelsForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.query.teacherId);
+      const findSchoolByTypeSchool: Schools[] = await this.schoolService.getSchoolsAndLevelsForTeacher(teacherId);
+      res.status(200).json({ data: findSchoolByTypeSchool });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

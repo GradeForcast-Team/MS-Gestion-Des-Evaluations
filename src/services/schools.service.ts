@@ -119,4 +119,41 @@ export class SchoolsService {
     }
   }
 
+  public async getSchoolsAndLevelsForTeacher(teacherId: number): Promise<any[]> {
+    try {
+      const teacherSchools = await this.school.findMany({
+        where: {
+          teacherSchools: {
+            some: {
+              teacherId: teacherId,
+            },
+          },
+        },
+        include: {
+          classes: {
+            include: {
+              niveau: true,
+            },
+          },
+        },
+      });
+
+      const formattedSchools = teacherSchools.map(school => {
+        const levels = Array.from(new Set(school.classes.map(classe => JSON.stringify(classe.niveau)))).map(level => JSON.parse(level));
+        return {
+          ...school,
+          levels: levels,
+        };
+      });
+
+      return formattedSchools;
+    } catch (error) {
+      console.error('Error fetching schools and levels for teacher:', error);
+      throw new HttpException(500, 'Internal Server Error');
+    }
+  }
+  
+  
+  
+
 }

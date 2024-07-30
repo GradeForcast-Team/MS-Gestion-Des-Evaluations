@@ -595,35 +595,46 @@ export class SyllabusService {
   }
   
 //les syllabus d'un professeur avec les classes
-  public async getSyllabusWithClassesForTeacher(teacherId: number): Promise<any[]> {
-    try {
-      const syllabi = await this.prisma.syllabus.findMany({
-        where: {
-          teacherId: teacherId,
-        },
-        include: {
-          syllabusClasse: {
-            include: {
-              classe: true,
+public async getSyllabusWithClassesForTeacher(teacherId: number): Promise<any[]> {
+  try {
+    const syllabi = await this.prisma.syllabus.findMany({
+      where: {
+        teacherId: teacherId,
+      },
+      include: {
+        syllabusClasse: {
+          include: {
+            classe: {
+              include: {
+                niveau: true, // Inclure les informations sur le niveau de chaque classe
+              },
             },
           },
         },
-      });
+      },
+    });
 
-      const formattedSyllabi = syllabi.map(syllabus => {
-        const classes = syllabus.syllabusClasse.map(sc => sc.classe);
-        const status = classes.length ? 'assigned' : 'not assigned';
-        return {
-          ...syllabus,
-          classes: classes.length ? classes : [{ status: 'not assigned' }],
-          status: status,
-        };
-      });
+    const formattedSyllabi = syllabi.map(syllabus => {
+      const classes = syllabus.syllabusClasse.map(sc => ({
+        ...sc.classe,
+        niveau: {
+          id: sc.classe.niveau.id,
+          name: sc.classe.niveau.name,
+        },
+        linkSyllabusClasse: sc.linkSyllabusClasse,
+      }));
+      const status = classes.length ? 'assigned' : 'not assigned';
+      return {
+        ...syllabus,
+        classes: classes.length ? classes : [{ status: 'not assigned' }],
+        status: status,
+      };
+    });
 
-      return formattedSyllabi;
-    } catch (error) {
-      console.error("Error fetching syllabi with classes for teacher:", error);
-      throw new HttpException(500, 'Internal Server Error');
-    }
+    return formattedSyllabi;
+  } catch (error) {
+    console.error("Error fetching syllabi with classes for teacher:", error);
+    throw new HttpException(500, 'Internal Server Error');
   }
+}
 }
