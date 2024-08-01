@@ -13,7 +13,7 @@ export class SyllabusClasseRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/syllabus/:syllabusId/classe`, this.syllabusClasse.getSyllabusClassesBySyllabusId);
-    this.router.get(`${this.path}/delete/:id(\\d+)/classe/:classeId/syllabus`, this.syllabusClasse.getSyllabusClassesByClasseId);
+    this.router.get(`${this.path}/classe/:classeId/syllabus`, this.syllabusClasse.getSyllabusClassesByClasseId);
     this.router.post(`${this.path}/create`, this.syllabusClasse.createSyllabusClasse);
     this.router.delete(`${this.path}/delete/:id(\\d+)`, this.syllabusClasse.deleteSyllabusClasse);
     this.router.get(`${this.path}/getSyllabusClasseLearnerById`, this.syllabusClasse.getSyllabusClasseLearnerById);

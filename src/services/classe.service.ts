@@ -281,4 +281,36 @@ export class ClasseService {
     }
   }
 
+  public async getLearnersByClasseId(classeId: number) {
+    try {
+      // Vérifier si la classe existe
+      const classeExists = await this.classe.findUnique({
+        where: { id: classeId },
+        include: {
+          learners: {
+            include: {
+              user: true, // Inclure les détails de l'utilisateur associé à chaque apprenant
+            },
+          },
+        },
+      });
+
+      if (!classeExists) {
+        throw new HttpException(404, 'Class not found');
+      }
+
+      // Extraire les apprenants de la classe
+      const learners = classeExists.learners;
+
+      if (!learners.length) {
+        throw new HttpException(404, 'No learners found for the given class');
+      }
+
+      return learners;
+    } catch (error) {
+      console.error("Error fetching learners by class ID:", error);
+      throw new HttpException(500, 'Internal Server Error');
+    }
+  }
+  
 }

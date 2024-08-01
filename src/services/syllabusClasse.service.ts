@@ -33,26 +33,53 @@ export class SyllabusClasseService {
 
   async getSyllabusClassesByClasseId(classeId: number): Promise<SyllabusClasse[]> {
     try {
+      // Vérifier si la classe existe
+      const classeExists = await this.prisma.classe.findUnique({
+        where: { id: classeId },
+      });
+  
+      if (!classeExists) {
+        throw new HttpException(404, 'Class not found');
+      }
+  
+      // Récupérer les syllabus associés à la classe
       const syllabusClasses = await this.prisma.syllabusClasse.findMany({
         where: {
           classeId: classeId,
         },
         include: {
-          syllabus: true,
+          syllabus: {
+            include: {
+              academicYear: true, // Inclure l'année académique
+              teacher: {
+                include: {
+                  user: true, // Inclure les informations de l'utilisateur lié au professeur
+                },
+              },
+              periode: true, // Inclure les informations de la période
+            },
+          },
           classe: true,
         },
       });
-
+  
+      // Vérifier si des syllabus sont associés à la classe
       if (!syllabusClasses.length) {
         throw new HttpException(404, 'No syllabi found for the given class');
       }
-
+  
       return syllabusClasses;
     } catch (error) {
+      if (error instanceof HttpException) {
+        throw error; // Relancer l'exception HTTP personnalisée
+      }
       console.error("Error fetching syllabi by class ID:", error);
       throw new HttpException(500, 'Internal Server Error');
     }
   }
+  
+  
+  
 
   async createSyllabusClasse(syllabusId: number, classeId: number) {
     try {
@@ -295,4 +322,28 @@ export class SyllabusClasseService {
       throw new HttpException(500, 'Internal Server Error');
     }
   }
+
+  // async getSyllabusClassesByClasseId(classeId: number): Promise<SyllabusClasse[]> {
+  //   try {
+  //     const syllabusClasses = await this.prisma.syllabusClasse.findMany({
+  //       where: {
+  //         classeId: classeId,
+  //       },
+  //       include: {
+  //         syllabus: true,
+  //         classe: true,
+  //       },
+  //     });
+  
+  //     if (!syllabusClasses.length) {
+  //       throw new HttpException(404, 'No syllabi found for the given class');
+  //     }
+  
+  //     return syllabusClasses;
+  //   } catch (error) {
+  //     console.error("Error fetching syllabi by class ID:", error);
+  //     throw new HttpException(500, 'Internal Server Error');
+  //   }
+  // }
+  
 }
