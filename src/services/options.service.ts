@@ -3,10 +3,12 @@ import { Service } from 'typedi';
 import { HttpException } from "@exceptions/HttpException";
 import { Options } from '@/interfaces/options.interface';
 import { CreateOptionsDto } from '@/dtos/options.dto';
+import PrismaService from './prisma.service';
 
 @Service()
 export class Options2Service {
-  public options = new PrismaClient().options;
+  private prisma = PrismaService.getInstance();
+  public options = this.prisma.options;
 
   async getOptionById(id: number): Promise<Options | null> {
     const option = await this.options.findUnique({

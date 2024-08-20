@@ -13,11 +13,13 @@ import {create, CreateOptions, CreateResult} from "html-pdf";
 import path from "path";
 import dotenv from 'dotenv';
 import * as process from "process";
+import PrismaService from './prisma.service';
 dotenv.config();
 
 @Service()
 export class SyllabusService {
-  private prisma = new PrismaClient()
+  private prisma = PrismaService.getInstance();
+  
 
   public async generateSyllabusPDF(syllabusId: number, teacherId: number) {
     const syllabus = await this.prisma.syllabus.findFirst({
@@ -470,30 +472,32 @@ export class SyllabusService {
   }
 
   public async getSyllabusForTeacher(syllabusId: number, teacherId: number): Promise<Syllabus> {
-    console.log(syllabusId);
-    const syllabus = await this.prisma.syllabus.findFirst({
-      where: {
-        id: syllabusId,
-        teacher: {
-          id: teacherId,
+    try {
+      // Recherche du syllabus en fonction de l'ID et de l'enseignant
+      const syllabus = await this.prisma.syllabus.findFirst({
+        where: {
+          id: syllabusId,
+          teacher: {
+            id: teacherId,
+          },
         },
-      },
-      include: {
-        academicYear: true,
-        periode: true,
-        pedagogicalMethod: true,
-        educationalSupport: true,
-        evaluationMode: true,
-        session: {
-          include: {
-            concept: {
-              include: {
-                quizzes: {
-                  include: {
-                    questions: {
-                      include: {
-                        propositions: true,
-                        answer: true,
+        include: {
+          academicYear: true,
+          periode: true,
+          pedagogicalMethod: true,
+          educationalSupport: true,
+          evaluationMode: true,
+          session: {
+            include: {
+              concept: {
+                include: {
+                  quizzes: {
+                    include: {
+                      questions: {
+                        include: {
+                          propositions: true,
+                          answer: true,
+                        },
                       },
                     },
                   },
@@ -501,16 +505,32 @@ export class SyllabusService {
               },
             },
           },
+          syllabusClasse: {
+            include: {
+              classe: {
+                include: {
+                  niveau: true, // Inclure les informations sur le niveau
+                  ecole: true,  // Inclure les informations sur l'école (id et nom)
+                },
+              },
+            },
+          },
         },
-      },
-    });
-
-    if (!syllabus) {
-      throw new Error('Syllabus not found or does not belong to the teacher.');
+      });
+  
+      // Vérification si le syllabus est trouvé
+      if (!syllabus) {
+        throw new Error('Syllabus not found or does not belong to the teacher.');
+      }
+  
+      // Retour du syllabus avec les informations des classes
+      return syllabus;
+    } catch (error) {
+      console.error("Error fetching syllabus for teacher:", error);
+      throw new Error('Internal Server Error');
     }
-
-    return syllabus;
   }
+
 
   // public async getSyllabusByLink(link: string) {
   //   const syllabus = await this.prisma.syllabus.findUnique({
@@ -611,6 +631,13 @@ public async getSyllabusWithClassesForTeacher(teacherId: number): Promise<any[]>
             },
           },
         },
+        academicYear: true, // Inclure l'année académique
+        teacher: {
+          include: {
+            user: true, // Inclure les informations de l'utilisateur lié au professeur
+          },
+        },
+        periode: true, // Inclure les informations de la période
       },
     });
 
@@ -628,6 +655,12 @@ public async getSyllabusWithClassesForTeacher(teacherId: number): Promise<any[]>
         ...syllabus,
         classes: classes.length ? classes : [{ status: 'not assigned' }],
         status: status,
+        academicYear: syllabus.academicYear, // Ajouter l'année académique
+        teacher: {
+          id: syllabus.teacher.id,
+          name: `${syllabus.teacher.user.name} ${syllabus.teacher.user.surname}`, // Nom complet de l'enseignant
+        },
+        periode: syllabus.periode, // Ajouter les informations sur la période
       };
     });
 
@@ -637,4 +670,5 @@ public async getSyllabusWithClassesForTeacher(teacherId: number): Promise<any[]>
     throw new HttpException(500, 'Internal Server Error');
   }
 }
+
 }

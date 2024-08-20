@@ -3,10 +3,12 @@ import { Service } from 'typedi';
 import {HttpException} from "@exceptions/HttpException";
 import {Schools} from "@interfaces/schools.interface";
 import {CreateSchoolDto, ValidateSchoolDto} from "@dtos/schools.dto";
+import PrismaService from './prisma.service';
 
 @Service()
 export class SchoolsService {
-  public school = new PrismaClient().schools;
+  private prisma = PrismaService.getInstance();
+  public school = this.prisma.schools;
 
   async getSchoolById(id: number): Promise<Schools> {
     const school = await this.school.findUnique({

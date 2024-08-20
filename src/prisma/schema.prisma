@@ -322,6 +322,7 @@ model Quiz {
   learnerAnswer LearnerAnswer[]
   isActive Boolean @default(true)
   conceptId Int
+  Date  DateTime     @default(now()) // Field to store the evaluation date
   concept   Concept  @relation(fields: [conceptId], references: [id], onDelete: Cascade)
 }
 
@@ -352,15 +353,16 @@ model Answer {
 }
 
 model LearnerAnswer {
-  id           Int       @id @default(autoincrement())
+  id              Int          @id @default(autoincrement())
   learner         Learner      @relation(fields: [learnerId], references: [id])
   learnerId       Int
-  quiz         Quiz      @relation(fields: [quizId], references: [id])
-  quizId       Int
-  question     Question  @relation(fields: [questionId], references: [id])
-  questionId   Int
-  proposition       Proposition    @relation(fields: [propositionId], references: [id])
-  propositionId     Int
+  quiz            Quiz         @relation(fields: [quizId], references: [id])
+  quizId          Int
+  question        Question     @relation(fields: [questionId], references: [id])
+  questionId      Int
+  proposition     Proposition  @relation(fields: [propositionId], references: [id])
+  propositionId   Int
+  evaluationDate  DateTime     @default(now()) // Field to store the evaluation date
 }
 
 // model AutoAssessment {
@@ -384,7 +386,7 @@ model ConceptAutoAssessment {
   optionId  Int
   option    Options  @relation(fields: [optionId], references: [id])
   noteCritere Float
-
+  autoEvaluationDate  DateTime     @default(now()) // Field to store the evaluation date
   @@unique([conceptId, learnerId], name: "unique_concept_assessment")
 }
 

@@ -14,6 +14,7 @@ import dotenv from 'dotenv';
 import * as process from "process";
 import { Server as SocketServer } from 'socket.io';
 import { ClasseService } from './services/classe.service';
+import eurekaClient from '../client-eureka';
 dotenv.config();
 export class App {
   public app: express.Application;
@@ -52,7 +53,15 @@ export class App {
       logger.info(`======= ENV: ${this.env} =======`);
       logger.info(`🚀 App listening on the port ${this.port}`);
       logger.info(`=================================`);
+       // Démarrer le client Eureka
+    eurekaClient.start((error) => {
+      if (error) {
+        logger.error('Erreur lors du démarrage de Eureka client', error);
+      } else {
+        logger.info('Eureka client started successfully');
+      }
     });
+  });
   }
 
   public getServer() {

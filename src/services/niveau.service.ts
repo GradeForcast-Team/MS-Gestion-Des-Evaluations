@@ -3,11 +3,13 @@ import { Service } from 'typedi';
 import { HttpException } from "@exceptions/HttpException";
 import { CreateNiveauDto } from '@/dtos/niveau.dto';
 import { Niveau } from '@/interfaces/niveau.interface'; // Assurez-vous de bien définir ce chemin
+import PrismaService from './prisma.service';
 
 @Service()
 export class NiveauService {
-  public niveau = new PrismaClient().niveau;
-  public typeSchool = new PrismaClient().typeSchools;
+  private prisma = PrismaService.getInstance();
+  public niveau = this.prisma.niveau;
+  public typeSchool = this.prisma.typeSchools;
 
   async getNiveauById(id: number): Promise<Niveau | null> {
     const niveau = await this.niveau.findUnique({

@@ -19,6 +19,7 @@ export class ClasseRoute implements Routes {
     this.router.get(`${this.path}/teacher`, this.classeController.getclasseByTeacher);
     this.router.get(`${this.path}/syllabusTeacherAndClass`, this.classeController.getSyllabiByTeacherAndClass);
     this.router.get(`${this.path}/:id(\\d+)`, this.classeController.getclasseById);
+    this.router.get(`${this.path}/getLearnsByClasse/:id(\\d+)`, this.classeController.getLearnersByClasseId);
     this.router.post(`${this.path}/create`, this.classeController.createclasses);
     this.router.post(`${this.path}/createClasseWithTeacher`, this.classeController.createClasseWithTeacher);
     this.router.put(`${this.path}/update`, this.classeController.updateclasses);

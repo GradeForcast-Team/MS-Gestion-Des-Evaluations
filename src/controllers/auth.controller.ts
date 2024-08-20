@@ -48,6 +48,7 @@ export class AuthController {
       }
     },
   }).single('photo');
+  public upload2 = multer({ storage: this.storage }).single('file');
 
   public registerTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -101,6 +102,28 @@ export class AuthController {
       const teacherData: UpdateTeacherDto = req.body;
       const updateTeacherData = await this.auth.updateSpecificInfoTeacher(teacherId, teacherData);
       res.status(200).json({ data: updateTeacherData, message: 'Teacher updated' });
+    } catch (error) {
+      next(error);
+    }
+  };
+  // Méthode pour l'upload des learners depuis un fichier Excel ou CSV
+  public uploadLearners = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+
+      this.upload2(req, res, async (err: any) => {
+        if (err) {
+          return next(err);
+        }
+
+        // Votre logique de création de l'enseignant ici
+        const id = Number(req.params.id); // Données de l'utilisateur
+        const image = req.file; // Informations sur l'image téléchargée
+        console.log("image",req.file)
+        // Traitez les données de l'utilisateur et l'image téléchargée ici...
+        const result = await this.auth.uploadLearnerExcel(image, id);
+        res.status(201).json({ data: result, message: 'upload' });
+      });
+
     } catch (error) {
       next(error);
     }

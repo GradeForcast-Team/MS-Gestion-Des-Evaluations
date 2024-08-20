@@ -23,6 +23,7 @@ import { SupportsPedagogiquesRoute } from './routes/supportPedagogic.route';
 import { PeriodeRoute } from './routes/typeAssessment.route';
 import { OptionsRoute } from './routes/options.route';
 import { NiveauRoute } from './routes/niveau.route';
+import { StatitiqueRoute } from './routes/statistique.route';
 
 ValidateEnv();
 
@@ -56,7 +57,8 @@ app.initializeRoutes([
   new SupportsPedagogiquesRoute(),
   new EvaluationModeRoute(),
   new OptionsRoute(),
-  new NiveauRoute()
+  new NiveauRoute(),
+  new StatitiqueRoute()
 ]);
 
 app.listen();

@@ -3,11 +3,13 @@ import { Service } from 'typedi';
 import { HttpException } from "@exceptions/HttpException";
 import { SyllabusClasse } from '../interfaces/syllabusClasse.interface';
 import { v4 as uuid } from 'uuid';
+import PrismaService from './prisma.service';
 
 @Service()
 export class SyllabusClasseService {
-  private prisma = new PrismaClient();
 
+  private prisma = PrismaService.getInstance();
+  
   async getSyllabusClassesBySyllabusId(syllabusId: number): Promise<SyllabusClasse[]> {
     try {
       const syllabusClasses = await this.prisma.syllabusClasse.findMany({

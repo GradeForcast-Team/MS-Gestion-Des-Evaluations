@@ -16,5 +16,10 @@ export class LearnerAnswerRoute implements Routes {
       `${this.path}/create`,
       this.learnerAnswerController.createLearnerAnswer
     );
+    this.router.get(
+      `${this.path}/getLearnerPerformance/:learnerId/syllabus/:syllabusId`,
+      this.learnerAnswerController.getLearnerPerformance
+    );
   }
+  
 }

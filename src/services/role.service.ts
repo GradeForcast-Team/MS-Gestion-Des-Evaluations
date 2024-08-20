@@ -3,10 +3,12 @@ import { Service } from 'typedi';
 import { HttpException } from '@exceptions/HttpException';
 import { Role } from '@/interfaces/role.interface';
 import { CreateRoleDto } from '@dtos/role.dto';
+import PrismaService from './prisma.service';
 
 @Service()
 export class RolesService {
-  public role = new PrismaClient().role;
+  private prisma = PrismaService.getInstance();
+  public role = this.prisma.role;
 
   async getRoleById(id: number): Promise<Role | null> {
     const role = await this.role.findUnique({

@@ -2,11 +2,13 @@ import { PrismaClient } from '@prisma/client';
 import { Service } from 'typedi';
 import {HttpException} from "@exceptions/HttpException";
 import { CreateStatusDto } from '@/dtos/status.dto';
+import PrismaService from './prisma.service';
 
 @Service()
 export class StatusService {
-  public status = new PrismaClient().statut;
-  public role = new PrismaClient().role;
+  private prisma = PrismaService.getInstance();
+  public status = this.prisma.statut;
+  public role = this.prisma.role;
   async getstatusById(id: number): Promise<Status | null> {
     const status = await this.status.findUnique({
       where: {

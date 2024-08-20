@@ -18,4 +18,16 @@ export class LearnerAnswerController {
       next(error);
     }
   };
+
+  public getLearnerPerformance = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const syllabusId = Number(req.params.syllabusId);
+      const learnerId = Number(req.params.learnerId);
+      const getLearnerPerformance: LearnerAnswer[] = await this.learnerAnswer.getLearnerPerformance(learnerId, syllabusId);
+
+      res.status(200).json({data: getLearnerPerformance});
+    } catch (error) {
+      next(error);
+    }
+  };
 }

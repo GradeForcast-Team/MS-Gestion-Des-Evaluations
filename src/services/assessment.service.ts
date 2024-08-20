@@ -5,6 +5,7 @@ import {QuizzService} from "@services/quizz.service";
 import {ConceptAutoAssessmentService} from "@services/conceptAutoAssessment.service";
 import { HttpException } from '@/exceptions/HttpException';
 import NodeCache from 'node-cache';
+import PrismaService from './prisma.service';
 
 // Déclarations des Types
 type ConceptScore = {
@@ -40,7 +41,8 @@ export class AssessmentService {
   // private prisma = new PrismaClient({
   //   log: ['query', 'info', 'warn', 'error']
   // });
-  private prisma = new PrismaClient();
+ 
+  private prisma = PrismaService.getInstance();
   private quizz = this.prisma.quiz;
   private learnerAnswer = this.prisma.learnerAnswer;
   private answer = this.prisma.answer;

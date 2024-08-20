@@ -3,10 +3,12 @@ import { Service } from 'typedi';
 import { HttpException } from '@exceptions/HttpException';
 import { CreateEvaluationModeDto, ValidateEvaluationModeDto } from '@/dtos/evaluationMode.dto';
 import { EvaluationMode } from '@/interfaces/evaluationMode.interface';
+import PrismaService from './prisma.service';
 
 @Service()
 export class EvaluationModeService {
-  public evaluationMode = new PrismaClient().evaluationMode;
+  private prisma = PrismaService.getInstance();
+  public evaluationMode = this.prisma.evaluationMode;
 
   async getEvaluationModeById(id: number): Promise<EvaluationMode | null> {
     const evaluationMode = await this.evaluationMode.findUnique({

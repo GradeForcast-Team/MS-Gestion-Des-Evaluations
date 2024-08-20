@@ -3,11 +3,13 @@ import { PrismaClient } from "@prisma/client";
 import { Session } from "@interfaces/session.interface";
 import { HttpException } from "@exceptions/HttpException";
 import { CreateSessionDto, GetSessionsBetweenDatesDto } from "@dtos/session.dto";
+import PrismaService from "./prisma.service";
 
 @Service()
 export class SessionService {
-  private session = new PrismaClient().session;
-  private syllabus = new PrismaClient().syllabus;
+  private prisma = PrismaService.getInstance();
+  private session = this.prisma.session;
+  private syllabus = this.prisma.syllabus;
 
   public async createSession(syllabusId: number, sessionData: CreateSessionDto): Promise<Session> {
     const existingSyllabus = await this.syllabus.findUnique({

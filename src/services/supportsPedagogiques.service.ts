@@ -2,10 +2,12 @@ import { PrismaClient, SupportsPedagogiques } from '@prisma/client';
 import { Service } from 'typedi';
 import { HttpException } from '@exceptions/HttpException';
 import { CreateSupportsPedagogiquesDto, ValidateSupportsPedagogiquesDto } from '@/dtos/supportsPedagogiques.dto';
+import PrismaService from './prisma.service';
 
 @Service()
 export class SupportsPedagogiquesService {
-  public supportsPedagogiques = new PrismaClient().supportsPedagogiques;
+  private prisma = PrismaService.getInstance();
+  public supportsPedagogiques = this.prisma.supportsPedagogiques;
 
   async getSupportsPedagogiquesById(id: number): Promise<SupportsPedagogiques | null> {
     const supportsPedagogiques = await this.supportsPedagogiques.findUnique({

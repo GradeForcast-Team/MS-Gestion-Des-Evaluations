@@ -3,10 +3,11 @@ import { PrismaClient } from '@prisma/client';
 import { HttpException } from '@exceptions/HttpException';
 import { CreateConceptDto } from '@/dtos/concept.dto';
 import { Concept } from '@/interfaces/concept.interface';
+import PrismaService from './prisma.service';
 
 @Service()
 export class ConceptService {
-  private prisma = new PrismaClient();
+  private prisma = PrismaService.getInstance();
   private session = this.prisma.session;
   private concept = this.prisma.concept;
 

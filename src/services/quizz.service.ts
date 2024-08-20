@@ -3,10 +3,11 @@ import { PrismaClient } from '@prisma/client';
 import { HttpException } from '@exceptions/HttpException';
 import { CreateQuizDto } from '@dtos/quizz.dto';
 import { Quiz } from '@interfaces/quizz.interface';
+import PrismaService from './prisma.service';
 
 @Service()
 export class QuizzService {
-  private prisma = new PrismaClient();
+  private prisma = PrismaService.getInstance();
   private quizz = this.prisma.quiz;
   private learnerAnswer = this.prisma.learnerAnswer;
   private answer = this.prisma.answer;

@@ -3,10 +3,12 @@ import { Service } from 'typedi';
 import { HttpException } from '@exceptions/HttpException';
 import { CreatePedagogicalMethodDto, ValidatePedagogicalMethodDto } from '@/dtos/pedagogicalMethod.dto';
 import { PedagogicalMethod } from '@/interfaces/pedagogicalMethode.interface';
+import PrismaService from './prisma.service';
 
 @Service()
 export class PedagogicalMethodService {
-  public pedagogicalMethod = new PrismaClient().pedagogicalMethod;
+  private prisma = PrismaService.getInstance();
+  public pedagogicalMethod = this.prisma.pedagogicalMethod;
 
   async getPedagogicalMethodById(id: number): Promise<PedagogicalMethod | null> {
     const pedagogicalMethod = await this.pedagogicalMethod.findUnique({

@@ -16,13 +16,15 @@ import {Teacher} from "@interfaces/teachers.interface";
 import {EmailService} from "@services/email.service";
 import { UpdateTeacherDto } from '@/dtos/teacher.dto';
 const speakeasy = require('speakeasy');
-
+import * as xlsx from 'xlsx';
+import * as fs from 'fs';
+import PrismaService from './prisma.service';
 @Service()
 export class AuthService {
-  public users = new PrismaClient().user;
-  public teacher = new PrismaClient().teacher;
-  public  address = new PrismaClient().address;
-  public prisma = new PrismaClient();
+  private prisma = PrismaService.getInstance(); 
+  public users = this.prisma.user;
+  public teacher = this.prisma.teacher;
+  public  address = this.prisma.address;
   public emailServiceInstance = Container.get(EmailService);
 
   public async registerTeacher(userData: CreateUserDto, image: any): Promise<{createUserData: User, createTeacherData: Teacher}> {
@@ -178,6 +180,176 @@ export class AuthService {
     });
 
     return updatedTeacher;
+}
+
+// public async uploadLearnerExcel(file: any, classeId: number): Promise<{ message: string }> {
+
+//   try {
+//     const fileExtension = file.originalname.split('.').pop().toLowerCase();
+//     let data = [];
+
+//     // Lire le fichier selon son type
+//     if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+//       const workbook = xlsx.readFile(file.path);
+//       const sheetName = workbook.SheetNames[0];
+//       const worksheet = workbook.Sheets[sheetName];
+//       data = xlsx.utils.sheet_to_json(worksheet);
+//     } else if (fileExtension === 'csv') {
+//       const workbook = xlsx.readFile(file.path, { type: 'binary', raw: true });
+//       const sheetName = workbook.SheetNames[0];
+//       const worksheet = workbook.Sheets[sheetName];
+//       data = xlsx.utils.sheet_to_json(worksheet, { raw: false, defval: null });
+//     } else {
+//       throw new Error('Invalid file format');
+//     }
+
+//     const learners = [];
+//     for (const row of data) {
+//       const { email, name, surname, phone, birthday, description } = row;
+//       const tempPassword = uuid().substring(0, 8); // Générer un mot de passe temporaire
+//       const hashedPassword = await hash(tempPassword, 10);
+
+//       // Vérification de l'existence de l'email
+//       const existingUser = await this.prisma.user.findUnique({ where: { email } });
+//       if (existingUser) {
+//         continue;
+//       }
+
+//       const createUserData = await this.prisma.user.create({
+//         data: {
+//           name,
+//           surname,
+//           email,
+//           phone: phone ? phone.toString() : null,
+//           birthday: birthday ? new Date(birthday) : null,
+//           password: hashedPassword,
+//           roleId: 2,
+//           validate_account_token: uuid(),
+//           validate_account_expires: new Date(Date.now() + 3600000), // 1 heure
+//         },
+//       });
+
+//       const createLearnerData = await this.prisma.learner.create({
+//         data: {
+//           userId: createUserData.id,
+//           classeId,
+//           id_school: 1, // Assurez-vous de définir ou récupérer dynamiquement
+//         },
+//       });
+
+//       // Envoi de l'email avec les détails du learner
+//       await this.emailServiceInstance.sendWelcomeEmail(createUserData, tempPassword);
+
+//       learners.push({ createUserData, createLearnerData });
+//     }
+
+//     // Supprimez le fichier après traitement
+//     fs.unlinkSync(file.path);
+
+//     return { message: `${learners.length} learners created and notified successfully` };
+//   } catch (error) {
+//     console.error('Error processing file:', error);
+//     throw new Error('Failed to process file');
+//   }
+// }
+
+public async uploadLearnerExcel(file: Express.Multer.File, classeId: number): Promise<{ message: string }> {
+  try {
+    // Récupérer l'ID de l'école à partir de l'ID de la classe
+    const classe = await this.prisma.classe.findUnique({
+      where: { id: classeId },
+      select: { ecoleId: true }
+    });
+
+    if (!classe) {
+      throw new Error('Classe non trouvée');
+    }
+
+    const idSchool = classe.ecoleId;
+
+    // Extraire les données du fichier
+    const data = this.extractDataFromFile(file);
+
+    // Collecter tous les emails pour vérification en lot
+    const emails = data.map(row => row.email);
+    const existingUsers = await this.prisma.user.findMany({
+      where: { email: { in: emails } },
+      select: { email: true }
+    });
+
+    const existingEmails = new Set(existingUsers.map(user => user.email));
+
+    // Préparation des opérations en parallèle
+    const operations = data.map(async (row) => {
+      const { email, name, surname, phone, birthday } = row;
+
+      if (existingEmails.has(email)) return null;
+
+      const tempPassword = uuid().substring(0, 8);
+      const hashedPassword = await hash(tempPassword, 10);
+
+      // Validation de la date d'anniversaire
+      const parsedBirthday = birthday ? new Date(birthday) : null;
+      if (parsedBirthday) parsedBirthday.setUTCHours(0, 0, 0, 0);
+      if (parsedBirthday && isNaN(parsedBirthday.getTime())) {
+        console.error(`Invalid birthday for email: ${email}`);
+        return null; // Ignorer cet enregistrement
+      }
+
+      // Création de l'utilisateur et de l'apprenant
+      const createUserData = await this.prisma.user.create({
+        data: {
+          name,
+          surname,
+          email,
+          phone: phone ? phone.toString() : null,
+          birthday: parsedBirthday,
+          password: hashedPassword,
+          roleId: 2,
+          validate_account_token: uuid(),
+          validate_account_expires: new Date(Date.now() + 3600000), // 1 heure
+        },
+      });
+
+      const createLearnerData = await this.prisma.learner.create({
+        data: {
+          userId: createUserData.id,
+          classeId,
+          id_school: idSchool,
+        },
+      });
+
+      // Envoi de l'email de bienvenue
+      await this.emailServiceInstance.sendWelcomeEmail(createUserData, tempPassword);
+
+      return { createUserData, createLearnerData };
+    });
+
+    // Exécuter toutes les opérations en parallèle
+    const results = await Promise.all(operations);
+    const learners = results.filter(result => result !== null);
+
+    // Supprimer le fichier après traitement
+    fs.unlinkSync(file.path);
+
+    return { message: `${learners.length} learners created and notified successfully` };
+  } catch (error) {
+    console.error('Error processing file:', error);
+    throw new Error('Failed to process file');
+  }
+}
+
+private extractDataFromFile(file: Express.Multer.File): any[] {
+  const fileExtension = file.originalname.split('.').pop().toLowerCase();
+
+  if (['xlsx', 'xls', 'csv'].includes(fileExtension)) {
+    const workbook = xlsx.readFile(file.path);
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    return xlsx.utils.sheet_to_json(worksheet, fileExtension === 'csv' ? { raw: false, defval: null } : {});
+  } else {
+    throw new Error('Invalid file format');
+  }
 }
 
 

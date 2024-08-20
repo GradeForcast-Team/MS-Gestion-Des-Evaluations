@@ -41,6 +41,16 @@ export class ClasseController {
     }
   };
 
+  public getLearnersByClasseId = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const findlearnerByClasseId = await this.classeService.getLearnersByClasseId(parseInt(id));
+      res.status(200).json({ data: findlearnerByClasseId });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getSyllabiByTeacherAndClass = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const teacherId = Number(req.query.teacherId);

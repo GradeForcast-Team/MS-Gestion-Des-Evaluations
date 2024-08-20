@@ -132,4 +132,28 @@ export class ConceptAutoAssessmentController {
       next(error);
     }
   };
+
+  // moyenne des scores d'une classe 
+  public getAverageConceptScoreForClass = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const classeId = Number(req.params.classeId)
+      const conceptId = Number(req.params.conceptId)
+      const createNiveauData = await this.conceptAutoAssessmentService.getAverageConceptScoreForClass(classeId,conceptId);
+      res.status(200).json({ data: createNiveauData });
+    } catch (error) {
+      next(error);
+    }
+  };
+  
+  //get Learner
+  public getLearnerAutoEvaluations = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const syllabusId = Number(req.params.syllabusId)
+      const learnerId = Number(req.params.learnerId)
+      const getLearnerAutoEvaluations = await this.conceptAutoAssessmentService.getLearnerAutoEvaluations(learnerId,syllabusId);
+      res.status(200).json({ data: getLearnerAutoEvaluations});
+    } catch (error) {
+      next(error);
+    }
+  };
 }

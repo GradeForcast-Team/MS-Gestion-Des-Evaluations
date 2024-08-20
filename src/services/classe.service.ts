@@ -4,12 +4,14 @@ import {HttpException} from "@exceptions/HttpException";
 import {Classe} from "@interfaces/classe.interface";
 import {CreateClasseDto, ValidateClasseDto} from "@dtos/classe.dto";
 import { Server } from 'socket.io';
+import PrismaService from './prisma.service';
 @Service()
 export class ClasseService {
-  public classe = new PrismaClient().classe;
-  public teacher = new PrismaClient().teacher;
-  public niveau = new PrismaClient().niveau;
-  public teacherclasse = new PrismaClient().teacherClasse;
+  private prisma = PrismaService.getInstance();
+  public classe = this.prisma.classe;
+  public teacher = this.prisma.teacher;
+  public niveau = this.prisma.niveau;
+  public teacherclasse = this.prisma.teacherClasse;
   private io: Server;
 
   constructor(io: Server) {
@@ -282,9 +284,9 @@ export class ClasseService {
   }
 
   public async getLearnersByClasseId(classeId: number) {
-    try {
-      // Vérifier si la classe existe
-      const classeExists = await this.classe.findUnique({
+  
+      // Vérifier si la classe existe et inclure les apprenants
+      const classe = await this.classe.findUnique({
         where: { id: classeId },
         include: {
           learners: {
@@ -294,23 +296,24 @@ export class ClasseService {
           },
         },
       });
-
-      if (!classeExists) {
-        throw new HttpException(404, 'Class not found');
+  
+      // Si la classe n'existe pas, retourner un message approprié
+      if (!classe) {
+        return { message: 'Class not found', statusCode: 404 };
+        
       }
-
+  
       // Extraire les apprenants de la classe
-      const learners = classeExists.learners;
-
-      if (!learners.length) {
+      const learners = classe.learners;
+  
+      // Si aucun apprenant n'est trouvé, retourner un message approprié
+      if (!learners || learners.length === 0) {
         throw new HttpException(404, 'No learners found for the given class');
       }
-
-      return learners;
-    } catch (error) {
-      console.error("Error fetching learners by class ID:", error);
-      throw new HttpException(500, 'Internal Server Error');
-    }
+  
+      // Retourner les apprenants si tout est correct
+      return  learners ;
+    
   }
   
 }

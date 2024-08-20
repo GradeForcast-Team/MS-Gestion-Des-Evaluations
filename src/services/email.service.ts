@@ -1,8 +1,9 @@
 import { Service } from 'typedi';
-import { HttpException } from "@exceptions/HttpException";
+import { HttpException } from '@exceptions/HttpException';
 import dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as nodemailer from 'nodemailer';
+import { User } from '@/interfaces/users.interface';
 const Handlebars = require('handlebars');
 dotenv.config();
 
@@ -10,7 +11,8 @@ const sourceReset = fs.readFileSync(`${__dirname}/template-mail/connexion.hbs`, 
 const templateConnexion = Handlebars.compile(sourceReset);
 
 @Service() // Ajout du décorateur Service
-export class EmailService { // Correction ici
+export class EmailService {
+  // Correction ici
 
   private transporter: nodemailer.Transporter;
 
@@ -26,8 +28,8 @@ export class EmailService { // Correction ici
     //   });
     // }
 
-     this.transporter = nodemailer.createTransport({
-       service: process.env.MAIL_SERVICE,
+    this.transporter = nodemailer.createTransport({
+      service: process.env.MAIL_SERVICE,
       host: process.env.LHOG_HOST,
       port: Number(process.env.LHOG_PORT),
       secure: false, // Use `true` for port 465, `false` for all other ports
@@ -38,7 +40,8 @@ export class EmailService { // Correction ici
     });
   }
 
-  public sendMailForConnection(data: any) { // Correction ici
+  public sendMailForConnection(data: any) {
+    // Correction ici
     const emailContent = templateConnexion(data);
 
     // Définition des options de l'e-mail
@@ -46,15 +49,43 @@ export class EmailService { // Correction ici
       from: process.env.MAIL_SOURCE,
       to: data.email,
       subject: 'Création compte NoteForecast',
-      html: emailContent
+      html: emailContent,
     };
 
-    return  this.transporter.sendMail(mailOptions, (error, info) => {
+    return this.transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
-        console.error('Erreur lors de l\'envoi de l\'e-mail :', error);
+        console.error("Erreur lors de l'envoi de l'e-mail :", error);
       } else {
         console.log('E-mail envoyé :', info.response);
       }
     });
+  }
+
+  // Méthode pour envoyer un email de bienvenue
+  public async sendWelcomeEmail(user: User, password: string) {
+    const mailOptions = {
+      from: '"Your App Name" <your-email@example.com>',
+      to: user.email,
+      subject: 'Welcome to Our Platform',
+      text: `Dear ${user.name} ${user.surname},
+
+Welcome to Our Platform. Your account has been created successfully.
+
+Your login details are:
+Email: ${user.email}
+Password: ${password}
+
+Please login and change your password.
+
+Best regards,
+The Team`,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Email sent to ${user.email}`);
+    } catch (error) {
+      console.error(`Error sending email to ${user.email}:`, error);
+    }
   }
 }

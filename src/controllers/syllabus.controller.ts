@@ -44,6 +44,16 @@ export class SyllabusController {
     }
   };
 
+  public getAllSyllabusForTeacher2 = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const professorId = Number(req.params.id);
+      const getAllSyllabusForTeacher = await this.syllabusService.geAllSyllabusForTeacher(professorId);
+      res.status(200).json({ data: getAllSyllabusForTeacher });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 
   // public getSyllabusByLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   //   try {
@@ -56,15 +66,15 @@ export class SyllabusController {
   // };
 
 
-  // public getSyllabusForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  //   try {
-  //     const { syllabusId, teacherId } = req.params;
-  //     const getSyllabusForTeacher = await this.syllabusService.getSyllabusForTeacher(parseInt(syllabusId), parseInt(teacherId));
-  //     res.status(200).json({ data: getSyllabusForTeacher });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // };
+  public getSyllabusForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { syllabusId, teacherId } = req.params;
+      const getSyllabusForTeacher = await this.syllabusService.getSyllabusForTeacher(parseInt(syllabusId), parseInt(teacherId));
+      res.status(200).json({ data: getSyllabusForTeacher });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   public updateSyllabus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

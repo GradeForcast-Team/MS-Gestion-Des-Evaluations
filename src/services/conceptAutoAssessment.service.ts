@@ -1,12 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import {Container, Service} from 'typedi';
 import {HttpException} from "@exceptions/HttpException";
+import PrismaService from './prisma.service';
 
 @Service()
 export class ConceptAutoAssessmentService {
 
-  public prisma = new PrismaClient();
-
+ 
+  private prisma = PrismaService.getInstance();
   // Auto Evaluation d'un concept
   public async saveConceptAutoAssessment(conceptId, learnerId, critereId) {
     const getNoteFromCriteria = (critereId) => {
@@ -921,5 +922,128 @@ export class ConceptAutoAssessmentService {
     });
   }
   
+  // Get the average concept score for a class
+  public async getAverageConceptScoreForClass(classeId: number, conceptId: number) {
+    // Retrieve all learners in the specified class
+    const learners = await this.prisma.learner.findMany({
+      where: { classeId: classeId },
+      select: {
+        id: true,
+        user: {
+          select: {
+            name: true,
+            surname: true,
+            email: true,
+          }
+        }
+      }
+    });
   
+    if (!learners.length) {
+      throw new HttpException(404, 'No learners found for the given class');
+    }
+  
+    const learnerIds = learners.map(learner => learner.id);
+  
+    // Retrieve all concept auto-assessments for the specified concept and learners
+    const conceptAssessments = await this.prisma.conceptAutoAssessment.findMany({
+      where: {
+        conceptId: conceptId,
+        learnerId: { in: learnerIds }
+      },
+      select: {
+        noteCritere: true,
+        autoEvaluationDate: true,
+        learner: {
+          select: {
+            user: {
+              select: {
+                name: true,
+                surname: true,
+                email: true
+              }
+            }
+          }
+        }
+      }
+    });
+  
+    if (!conceptAssessments.length) {
+      throw new HttpException(404, 'No concept assessments found for the given concept and class');
+    }
+  
+    // Calculate the average score
+    const totalScore = conceptAssessments.reduce((sum, assessment) => sum + assessment.noteCritere, 0);
+    const averageScore = totalScore / conceptAssessments.length;
+  
+    return {
+      averageScore,
+      numberOfAssessments: conceptAssessments.length,
+      assessments: conceptAssessments.map(a => ({
+        date: a.autoEvaluationDate.toISOString().split('T')[0],
+        score: a.noteCritere,
+        learner: {
+          name: a.learner.user.name,
+          surname: a.learner.user.surname,
+          email: a.learner.user.email
+        }
+      }))
+    };
+  }
+  // Get learner by classeId, syllabus Id LearnerID
+  public async getLearnerAutoEvaluations(learnerId: number, syllabusId: number) {
+    // Récupérer toutes les sessions et concepts pour le syllabus spécifié
+    const sessions = await this.prisma.session.findMany({
+      where: { syllabusId: syllabusId },
+      include: {
+        concept: {
+          include: {
+            conceptAutoAssessment: {
+              where: { learnerId: learnerId },
+              select: {
+                noteCritere: true,
+                autoEvaluationDate: true
+              }
+            }
+          }
+        }
+      }
+    });
+  
+    // Préparer le tableau final des sessions
+    const sessionsArray = sessions.map(session => {
+      const concepts = session.concept.map(concept => {
+        const assessment = concept.conceptAutoAssessment[0]; // Puisque nous récupérons pour un seul learner
+        return {
+          conceptId: concept.id,
+          conceptName: concept.name,
+          score: assessment ? assessment.noteCritere : null, // Score ou NULL si pas d'évaluation
+          date: assessment ? assessment.autoEvaluationDate.toISOString().split('T')[0] : null // Date ou NULL si pas d'évaluation
+        };
+      });
+  
+      return {
+        sessionId: session.id,
+        sessionName: session.name,
+        concepts: concepts
+      };
+    });
+  
+    // Vérification si des sessions sont trouvées
+    if (!sessionsArray.length) {
+      throw new HttpException(404, 'No sessions found for the given syllabus');
+    }
+  
+    return sessionsArray;
+  }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
 }

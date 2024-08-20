@@ -3,13 +3,15 @@ import { Service } from 'typedi';
 import { HttpException } from '@exceptions/HttpException';
 import { AcademicYear } from '@/interfaces/academicYear.interface';
 import { CreateAcademicYearDto, ValidateAcademicYearDto } from '@/dtos/academicYears.dto';
+import PrismaService from './prisma.service';
 
 @Service()
 export class AcademicYearService {
-  public academicYear = new PrismaClient().academicYear;
+  
+  private prisma = PrismaService.getInstance();
 
   async getAcademicYearById(id: number) : Promise<AcademicYear | null> {
-    const academicYear = await this.academicYear.findUnique({
+    const academicYear = await this.prisma.academicYear.findUnique({
       where: {
         id,
       },
@@ -23,11 +25,11 @@ export class AcademicYearService {
   }
 
   public async getAllAcademicYears(): Promise<AcademicYear[]> {
-    return this.academicYear.findMany();
+    return this.prisma.academicYear.findMany();
   }
 
   public async createAcademicYear(academicYearData: CreateAcademicYearDto): Promise<AcademicYear> {
-    return this.academicYear.create({
+    return this.prisma.academicYear.create({
       data: {
         startYear: academicYearData.startYear,
         endYear: academicYearData.endYear,
@@ -42,7 +44,7 @@ export class AcademicYearService {
       throw new HttpException(404, 'Academic Year not found');
     }
 
-    return this.academicYear.update({
+    return this.prisma.academicYear.update({
       where: {
         id,
       },
@@ -59,7 +61,7 @@ export class AcademicYearService {
       throw new HttpException(404, 'Academic Year not found');
     }
 
-    return this.academicYear.delete({
+    return this.prisma.academicYear.delete({
       where: {
         id,
       },

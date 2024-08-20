@@ -3,10 +3,12 @@ import { Service } from 'typedi';
 import { HttpException } from '@exceptions/HttpException';
 import { Periode } from '@interfaces/periode.interface';
 import { CreatePeriodeDto, ValidatePeriodeDto } from '@/dtos/periode.dto';
+import PrismaService from './prisma.service';
 
 @Service()
 export class PeriodeService {
-  public periode = new PrismaClient().periode;
+  private prisma = PrismaService.getInstance();
+  public periode = this.prisma.periode;
 
   async getPeriodeById(id: number): Promise<Periode | null> {
     const periode = await this.periode.findUnique({
