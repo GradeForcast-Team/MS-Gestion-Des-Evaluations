@@ -81,7 +81,7 @@ jobs:
             docker rm evaluation || true
 
             # Télécharger la nouvelle image depuis Docker Hub
-            docker pull elohim237/repoevaluation:${{ github.sha }}
+            docker pull elohim237/repoevaluation:latest
 
             # Créer un nouveau conteneur à partir de l'image
             docker run -d --name evaluation -p 3001:3001 --env-file .env elohim237/repoevaluation:latest
