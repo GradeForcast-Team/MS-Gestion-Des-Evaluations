@@ -180,10 +180,16 @@ export class SyllabusService {
     }
   
     doc.end();
-    writeStream.on('finish', () => console.log('PDF généré avec succès.'));
-    return filePath;
-  }
-  
+    // writeStream.on('finish', () => console.log('PDF généré avec succès.'));
+    // return filePath;
+     // Make sure the PDF generation is finished before returning the file path
+  return new Promise<string>((resolve, reject) => {
+    writeStream.on('finish', () => {
+      console.log('PDF généré avec succès.');
+      resolve(filePath); // Return the filePath once the PDF is fully written
+    });
+  })
+}
 
   public async createOptimalSyllabus(id: number, syllabusData: CreateSyllabusDto) {
     // Calculer la somme des heures de session

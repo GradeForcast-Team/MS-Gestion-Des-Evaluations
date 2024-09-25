@@ -348,4 +348,32 @@ export class SyllabusClasseService {
   //   }
   // }
   
+  async getLearnerInfoById(learnerId: number): Promise<any> {
+  
+      const learner = await this.prisma.learner.findUnique({
+        where: { id: learnerId },
+        include: {
+          user: true, // Include basic user details
+          classe: {
+            include: {
+              ecole: {
+                include: {
+                  typeSchools: true, // Include school type details
+                },
+              },
+              niveau: true, // Include level of education details
+            },
+          },
+          school: true, // Include the school details
+        },
+      });
+
+      // If the learner is not found, throw a 404 error
+      if (!learner) {
+        throw new HttpException(404, 'Learner not found');
+      }
+
+      // Return the complete learner information
+      return learner;
+  }
 }

@@ -61,6 +61,18 @@ export class SyllabusClasseController {
     }
   };
 
+  //Info Learner
+  public getLearnerInfoById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const learnerId  = req.params.learnerId;
+
+    try {
+      const getLearnerInfoById = await this.syllabusClasseService.getLearnerInfoById(Number(learnerId));
+      res.status(200).json({ data: getLearnerInfoById });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   // Fonction pour obtenir un syllabus par ID
   public getSyllabusClasseLearnerById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     

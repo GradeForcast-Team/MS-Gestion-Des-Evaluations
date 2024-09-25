@@ -53,12 +53,12 @@ export class AssessmentController {
     }
   };
 
-  //Controller pour obtenir toutes les informations sur l'evaluation
-  public getAllInfo = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  //Controller pour obtenir toutes les informations sur l'evaluation d'un quizz
+  public getQuizzDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const learnerId = Number(req.query.learnerId);
-      const conceptId = Number(req.query.conceptId);
-      const evaluationDetails = await this.assessment.getQuizDetails(learnerId, conceptId);
+      const learnerId = Number(req.params.learnerId);
+      const quizzId = Number(req.params.quizzId);
+      const evaluationDetails = await this.assessment.getQuizzDetails(learnerId, quizzId);
       res.status(200).json({ data: evaluationDetails });
     } catch (error) {
       next(error);

@@ -29,6 +29,27 @@ export class QuizzController {
       next(error);
     }
   };
+  
+
+  public getAllQuizzForTeacher = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.teacherId);
+      const getAllQuizzForTeacher = await this.quizzService.getAllQuizzForTeacher(teacherId);
+      res.status(200).json({ data: getAllQuizzForTeacher });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getQuizDetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const quizzId = Number(req.params.quizzId);
+      const getQuizDetails = await this.quizzService.getQuizDetails(quizzId);
+      res.status(200).json({ data: getQuizDetails });
+    } catch (error) {
+      next(error);
+    }
+  };
 
   public updateQuizzForConcept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
@@ -39,6 +60,17 @@ export class QuizzController {
       const updateQuizzForSession: Quiz = await this.quizzService.updateQuizzForConcept(conceptId, quizzId, quizz);
 
       res.status(201).json({ data: updateQuizzForSession, message: 'updated' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public updateQuizzData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const quizz: Quiz = req.body;
+      const quizzId = Number(req.params.quizzId);
+      const updateQuizzData: Quiz = await this.quizzService.updateQuizzData(quizzId, quizz);
+      res.status(201).json({ data: updateQuizzData, message: 'updated' });
     } catch (error) {
       next(error);
     }

@@ -18,5 +18,6 @@ export class SyllabusClasseRoute implements Routes {
     this.router.delete(`${this.path}/delete/:id(\\d+)`, this.syllabusClasse.deleteSyllabusClasse);
     this.router.get(`${this.path}/getSyllabusClasseLearnerById`, this.syllabusClasse.getSyllabusClasseLearnerById);
     this.router.get(`${this.path}/getAllSyllabusByLearnerId`, this.syllabusClasse.getAllSyllabusByLearnerId);
+    this.router.get(`${this.path}/Infolearner/:learnerId`, this.syllabusClasse.getLearnerInfoById);
   }
 }

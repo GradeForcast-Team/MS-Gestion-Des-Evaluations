@@ -15,4 +15,16 @@ export class StatistiqueController {
         next(error);
       }
     };
+
+    //Voir l'evolution du learner
+    public trackLearnerProgress = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+      try {
+        const syllabusId = Number(req.params.syllabusId)
+        const learnerId = Number(req.params.learnerId)
+        const trackLearnerProgress = await this.statistiqueService.trackLearnerProgress(learnerId,syllabusId);
+        res.status(200).json({ data: trackLearnerProgress });
+      } catch (error) {
+        next(error);
+      }
+    };
 }  

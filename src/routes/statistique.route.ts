@@ -14,6 +14,6 @@ export class StatitiqueRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/calculateEvaluationAndAutoEvaluation/:learnerId/syllabus/:syllabusId`, this.statistiqueController.calculateEvaluationAndAutoEvaluation);
-   
+    this.router.get(`${this.path}/trackLearnerProgress/:learnerId/syllabus/:syllabusId`, this.statistiqueController.trackLearnerProgress);
   }
 }

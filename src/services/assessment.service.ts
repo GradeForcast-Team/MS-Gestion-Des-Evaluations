@@ -1076,6 +1076,81 @@ public async calculateTotalLearnerScores(learnerId: number) {
   return scores;
 }
 
+public async getQuizzDetails(learnerId: number, quizId: number) {
+  // Fetch the learner with associated user, class, and school details
+  const learner = await this.prisma.learner.findUnique({
+    where: { id: learnerId },
+    include: {
+      user: true,
+      classe: {
+        include: {
+          ecole: true,
+        },
+      },
+    },
+  });
+
+  if (!learner) {
+    throw new HttpException(404, 'Learner not found');
+  }
+
+  // Fetch the specific quiz details with concept, session, and syllabus information
+  const quiz = await this.prisma.quiz.findUnique({
+    where: { id: quizId },
+    include: {
+      concept: {
+        include: {
+          session: {
+            include: {
+              syllabus: {
+                include: {
+                  teacher: {
+                    include: { user: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      questions: {
+        include: {
+          propositions: true,
+        },
+      },
+    },
+  });
+
+  if (!quiz || !quiz.concept || !quiz.concept.session) {
+    throw new HttpException(404, 'Quiz or related concept/session not found');
+  }
+
+  // Calculate the learner's score for this quiz
+  const scorePercentage = await this.calculateLearnerScore(learnerId, quizId);
+
+  // Build the detailleQuizz structure
+  const detailleQuizz = await this.getQuizDetailsByConcept(quiz.concept.name, learnerId);
+
+  // Construct the response with the detailed quiz information
+  const response = {
+    class: learner.classe,
+    school: learner.classe?.ecole,
+    detailleQuizz: [{
+      concept: quiz.concept.name,
+      Questions: detailleQuizz,
+    }],
+    session: {
+      id: quiz.concept.session.id,
+      name: quiz.concept.session.name,
+    },
+    score: scorePercentage,
+    syllabus: quiz.concept.session.syllabus,
+    teacher: quiz.concept.session.syllabus?.teacher?.user,
+  };
+
+  return response;
+}
+
 // public async calculateLearnerScore(learnerId: number, quizId: number) {
 //   const learnerAnswers = await this.prisma.learnerAnswer.findMany({
 //     where: { learnerId, quizId },

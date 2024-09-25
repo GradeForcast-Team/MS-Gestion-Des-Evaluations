@@ -195,6 +195,48 @@ export class ConceptService {
       throw new Error('Error deleting concept');
     }
   }
-  
+
+  public async getTeacherData(teacherId: number): Promise<any> {
+    try {
+      const teacherData = await this.prisma.teacher.findUnique({
+        where: { id: teacherId },
+        include: {
+          syllabus: {
+            include: {
+              session: {
+                include: {
+                  concept: true, // Inclut les concepts associés à la session
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!teacherData) {
+        throw new HttpException(404, 'Teacher not found');
+      }
+
+      // Construction d'une réponse JSON minimaliste avec les IDs
+      const result = teacherData.syllabus.map(syllabus => ({
+        syllabusId: syllabus.id,
+        syllabusName: syllabus.name,
+        sessions: syllabus.session.map(session => ({
+          sessionId: session.id,
+          sessionName: session.name,
+          concepts: session.concept.map(concept => ({
+            conceptId: concept.id,
+            conceptName: concept.name
+          })),
+        })),
+      }));
+
+      return result;
+    } catch (error) {
+      console.error('Error getting teacher data:', error);
+      throw new Error('Error getting teacher data');
+    }
+  }
+
   
 }

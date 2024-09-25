@@ -27,55 +27,104 @@ export class AuthService {
   public  address = this.prisma.address;
   public emailServiceInstance = Container.get(EmailService);
 
-  public async registerTeacher(userData: CreateUserDto, image: any): Promise<{createUserData: User, createTeacherData: Teacher}> {
+  // public async registerTeacher(userData: CreateUserDto, image: any): Promise<{createUserData: User, createTeacherData: Teacher}> {
+  //   try {
+  //     // Vérifier si l'utilisateur existe déjà
+  //     const existingUser = await this.users.findUnique({where: {email: userData.email}});
+  //     if (existingUser) {
+  //       throw new HttpException(409, `This email ${userData.email} already exists`);
+  //     }
+
+  //     // Hacher le mot de passe
+  //     const hashedPassword = await hash(userData.password, 10);
+  //     const validateAccountTokenExpires = new Date(Date.now() + 3600000);
+  //     // Créer l'utilisateur
+  //     let createUserData = null;
+  //     let createTeacherData =null;
+  //     let createAdressData = null;
+  //     await this.users.create({
+  //       data: {
+  //         ... userData,
+  //         roleId: 1,
+  //         password: hashedPassword,
+  //         validate_account_token: uuid(),
+  //         validate_account_expires: new Date(Date.now() + 3600000),
+  //         photo: image ? image.path : null
+  //       },
+  //     }).then((createdUser: User) => {
+  //       createUserData = createdUser;
+  //     });;
+
+  //     // Créer le professeur lié à l'utilisateur
+  //     createTeacherData = await this.teacher.create({
+  //       data: {
+  //         userId: createUserData.id
+  //       },
+  //     }).then(async  (result) =>{
+  //       const link = `www.google.com`;
+  //       this.emailServiceInstance.sendMailForConnection(userData)
+  //     });
+
+  //     // Envoyer l'e-mail de confirmation
+
+
+  //     return { createUserData , createTeacherData};
+  //   } catch (error) {
+  //     logger.info("le error", error)
+  //     throw error;
+  //   }
+  // }
+
+  public async registerTeacher(userData: CreateUserDto, image: any): Promise<{ createUserData: User, createTeacherData: any }> {
     try {
       // Vérifier si l'utilisateur existe déjà
-      const existingUser = await this.users.findUnique({where: {email: userData.email}});
+      const existingUser = await this.users.findUnique({ where: { email: userData.email } });
       if (existingUser) {
         throw new HttpException(409, `This email ${userData.email} already exists`);
       }
-
+  
       // Hacher le mot de passe
       const hashedPassword = await hash(userData.password, 10);
       const validateAccountTokenExpires = new Date(Date.now() + 3600000);
+  
       // Créer l'utilisateur
-      let createUserData = null;
-      let createTeacherData =null;
-      let createAdressData = null;
-      await this.users.create({
+      const createUserData = await this.users.create({
         data: {
-          ... userData,
-          roleId: 1,
+          ...userData,
+          roleId: 1, // roleId pour l'enseignant
           password: hashedPassword,
           validate_account_token: uuid(),
-          validate_account_expires: new Date(Date.now() + 3600000),
-          photo: image ? image.path : null
+          validate_account_expires: validateAccountTokenExpires,
+          photo: image ? image.path : null,
         },
-      }).then((createdUser: User) => {
-        createUserData = createdUser;
-      });;
-
-      // Créer le professeur lié à l'utilisateur
-      createTeacherData = await this.teacher.create({
-        data: {
-          userId: createUserData.id
-        },
-      }).then(async  (result) =>{
-        const link = `www.google.com`;
-        this.emailServiceInstance.sendMailForConnection(userData)
       });
-
+  
+      // Créer le professeur lié à l'utilisateur
+      const createTeacherData = await this.teacher.create({
+        data: {
+          userId: createUserData.id,
+          StartDateTeaching: null, // Valeur par défaut ou issue de userData
+          pool: null, // Valeur appropriée ici
+          est_membre: false, // Valeur par défaut
+          typeTeacherId: 1, // Un type par défaut
+        },
+      });
+  
       // Envoyer l'e-mail de confirmation
-
-
-      return { createUserData , createTeacherData};
+      await this.emailServiceInstance.sendMailForConnection(userData);
+  
+      // Retourner l'utilisateur et le professeur séparément
+      return { createUserData, createTeacherData };
     } catch (error) {
-      logger.info("le error", error)
+      logger.info("le error", error);
       throw error;
     }
   }
+  
+  
+  
 
-  public async loginTeacher(userData: CreateUserDto){
+  public async loginTeacher(userData: any){
     try {
       // Recherche de l'utilisateur par email avec les données de l'enseignant
       const findUser = await this.prisma.user.findUnique({
@@ -181,77 +230,6 @@ export class AuthService {
 
     return updatedTeacher;
 }
-
-// public async uploadLearnerExcel(file: any, classeId: number): Promise<{ message: string }> {
-
-//   try {
-//     const fileExtension = file.originalname.split('.').pop().toLowerCase();
-//     let data = [];
-
-//     // Lire le fichier selon son type
-//     if (fileExtension === 'xlsx' || fileExtension === 'xls') {
-//       const workbook = xlsx.readFile(file.path);
-//       const sheetName = workbook.SheetNames[0];
-//       const worksheet = workbook.Sheets[sheetName];
-//       data = xlsx.utils.sheet_to_json(worksheet);
-//     } else if (fileExtension === 'csv') {
-//       const workbook = xlsx.readFile(file.path, { type: 'binary', raw: true });
-//       const sheetName = workbook.SheetNames[0];
-//       const worksheet = workbook.Sheets[sheetName];
-//       data = xlsx.utils.sheet_to_json(worksheet, { raw: false, defval: null });
-//     } else {
-//       throw new Error('Invalid file format');
-//     }
-
-//     const learners = [];
-//     for (const row of data) {
-//       const { email, name, surname, phone, birthday, description } = row;
-//       const tempPassword = uuid().substring(0, 8); // Générer un mot de passe temporaire
-//       const hashedPassword = await hash(tempPassword, 10);
-
-//       // Vérification de l'existence de l'email
-//       const existingUser = await this.prisma.user.findUnique({ where: { email } });
-//       if (existingUser) {
-//         continue;
-//       }
-
-//       const createUserData = await this.prisma.user.create({
-//         data: {
-//           name,
-//           surname,
-//           email,
-//           phone: phone ? phone.toString() : null,
-//           birthday: birthday ? new Date(birthday) : null,
-//           password: hashedPassword,
-//           roleId: 2,
-//           validate_account_token: uuid(),
-//           validate_account_expires: new Date(Date.now() + 3600000), // 1 heure
-//         },
-//       });
-
-//       const createLearnerData = await this.prisma.learner.create({
-//         data: {
-//           userId: createUserData.id,
-//           classeId,
-//           id_school: 1, // Assurez-vous de définir ou récupérer dynamiquement
-//         },
-//       });
-
-//       // Envoi de l'email avec les détails du learner
-//       await this.emailServiceInstance.sendWelcomeEmail(createUserData, tempPassword);
-
-//       learners.push({ createUserData, createLearnerData });
-//     }
-
-//     // Supprimez le fichier après traitement
-//     fs.unlinkSync(file.path);
-
-//     return { message: `${learners.length} learners created and notified successfully` };
-//   } catch (error) {
-//     console.error('Error processing file:', error);
-//     throw new Error('Failed to process file');
-//   }
-// }
 
 public async uploadLearnerExcel(file: Express.Multer.File, classeId: number): Promise<{ message: string }> {
   try {

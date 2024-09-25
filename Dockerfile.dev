@@ -1,19 +1,28 @@
-# NodeJS Version 16
+# Utiliser une image de base officielle Node.js
 FROM node:16.18-buster-slim
 
-# Copy Dir
 COPY . ./app
 
-# Work to Dir
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Install Node Package
-RUN npm install --legacy-peer-deps
+# Installer les dépendances
+RUN npm install 
+RUN npm install -g @swc/cli @swc/core
+# Ajouter openssl à l'installation
+RUN apt-get update -y && apt-get install -y openssl
 
-# Set Env
-ENV NODE_ENV development
+# Générez le client Prisma
+RUN npx prisma generate
 
-EXPOSE 3000
+# Appliquez les migrations Prisma (lors de la construction de l'image)
+# Utilisez `npx prisma migrate deploy` pour appliquer les migrations dans un environnement de production
 
-# Cmd script
-CMD ["npm", "run", "dev"]
+
+ENV NODE_ENV production
+
+# Exposer le port sur lequel l'application s'exécute
+EXPOSE 3001
+
+# Démarrer l'application
+CMD ["npm", "run", "start"]

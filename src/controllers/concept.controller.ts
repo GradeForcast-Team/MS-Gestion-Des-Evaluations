@@ -29,6 +29,16 @@ export class Conceptcontroller {
     }
   };
 
+  public getTeacherData = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.teacherId);
+      const concepts = await this.conceptService.getTeacherData(teacherId);
+      res.status(200).json({ data: concepts });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getConceptById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const conceptId = Number(req.query.id);

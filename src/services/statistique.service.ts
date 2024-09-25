@@ -4,6 +4,32 @@ import { HttpException } from "@exceptions/HttpException";
 import { CreateSessionDto, GetSessionsBetweenDatesDto } from "@dtos/session.dto";
 import PrismaService from "./prisma.service";
 
+// Déclarations des Types
+type ConceptScore = {
+  score: number;
+  totalQuestions: number;
+  sessionId: number;
+  conceptName: string;
+  sessionName: string;// Ajouter cette ligne pour inclure le nom de la session
+};
+
+type SessionScore = {
+  score: number;
+  totalConcepts: number;
+  sessionName: string;
+  scorePercentage?: number;
+};
+
+type QuizDetail = {
+  quizId: number;
+  questions: {
+    question: string;
+    propositions: { id: number; valeur: string }[];
+    learnerAnswer: string | null;
+    correctAnswer: string | null;
+    isCorrect: boolean;
+  }[];
+};
 @Service()
 export class StatistiqueService {
     private prisma = PrismaService.getInstance();
@@ -134,64 +160,6 @@ export class StatistiqueService {
         return sessionsArray;
       }
 
-//    public async calculateEvaluationAndAutoEvaluationGap(learnerId: number, syllabusId: number): Promise<number> {
-//   // Récupérer les performances de l'apprenant
-//   const learnerPerformance = await this.getLearnerPerformance(learnerId, syllabusId);
-//   const learnerAutoEvaluations = await this.getLearnerAutoEvaluations(learnerId, syllabusId);
-
-//   let totalEvaluationScore = 0;
-//   let totalAutoEvaluationScore = 0;
-//   let totalConcepts = 0;
-//   let totalSessions = learnerPerformance.length;
-
-//   // Parcourir chaque session dans les performances de l'apprenant
-//   learnerPerformance.forEach((session) => {
-//     let sessionEvaluationScore = 0;
-//     let sessionAutoEvaluationScore = 0;
-//     let numberOfConceptsInSession = session.concepts.length;
-
-//     session.concepts.forEach((concept) => {
-//       totalConcepts++;
-
-//       // Calculer le score de l'évaluation pour ce concept
-//       const conceptEvaluationScore = concept.quizzes.reduce((sum, quiz) => {
-//         // Supposons que chaque quiz a un score sur 100
-//         return sum + 100; // Remplacer 100 par la méthode de calcul réelle si nécessaire
-//       }, 0) / (concept.quizzes.length || 1); // Eviter division par zéro
-
-//       sessionEvaluationScore += conceptEvaluationScore;
-
-//       // Trouver l'auto-évaluation correspondante
-//       const autoEvaluationSession = learnerAutoEvaluations.find(
-//         (autoEvalSession) => autoEvalSession.sessionId === session.sessionId
-//       );
-
-//       if (autoEvaluationSession) {
-//         const autoEvaluationConcept = autoEvaluationSession.concepts.find(
-//           (autoEvalConcept) => autoEvalConcept.conceptId === concept.conceptId
-//         );
-
-//         if (autoEvaluationConcept) {
-//           sessionAutoEvaluationScore += autoEvaluationConcept.score || 0;
-//         }
-//       }
-//     });
-
-//     // Ajouter les scores de la session aux totaux globaux
-//     totalEvaluationScore += sessionEvaluationScore / numberOfConceptsInSession;
-//     totalAutoEvaluationScore += sessionAutoEvaluationScore / numberOfConceptsInSession;
-//   });
-
-//   // Calculer les notes finales pour la matière
-//   const finalEvaluationScore = totalEvaluationScore / totalSessions;
-//   const finalAutoEvaluationScore = totalAutoEvaluationScore / totalSessions;
-
-//   // Calculer l'écart
-//   const ecart = finalEvaluationScore - finalAutoEvaluationScore;
-
-//   return ecart;
-// }
-
 public async calculateEvaluationAndAutoEvaluationGap(learnerId: number, syllabusId: number): Promise<number> {
     console.log("Début du calcul de l'écart pour le learner:", learnerId, "et le syllabus:", syllabusId);
   
@@ -293,5 +261,236 @@ public async calculateEvaluationAndAutoEvaluationGap(learnerId: number, syllabus
     return groupedSessions;
   }
   
+  public async trackLearnerProgress(learnerId: number, syllabusId: number): Promise<any[]> {
+    // Récupérer les scores des quiz
+    const quizDetails = await this.getAllQuizDetails(learnerId);
+    const autoEvaluations = await this.getLearnerAutoEvaluations(learnerId, syllabusId);
+
+    const progressData = [];
+
+    // Align and merge quiz and auto-evaluation data by session and concept
+    for (const autoEvalSession of autoEvaluations) {
+      const sessionId = autoEvalSession.sessionId;
+      const sessionName = autoEvalSession.sessionName;
+
+      const quizSession = quizDetails.evaluations.find(e => e.session.id === sessionId);
+      const quizConcepts = quizSession ? quizSession.detailleQuizz : [];
+
+      for (const autoEvalConcept of autoEvalSession.concepts) {
+        const conceptId = autoEvalConcept.conceptId;
+        const conceptName = autoEvalConcept.conceptName;
+        const autoEvalScore = autoEvalConcept.score || 0;
+
+        // Find matching quiz concept
+        const quizConcept = quizConcepts.find(qc => qc.concept === conceptName);
+        const quizScores = quizConcept ? quizConcept.Questions.map(q => q.score || 0) : [0];
+
+        // Prepare progress data
+        progressData.push({
+          sessionId,
+          sessionName,
+          conceptId,
+          conceptName,
+          quizScores,
+          autoEvaluationScore: autoEvalScore,
+          date: autoEvalConcept.date
+        });
+      }
+    }
+
+    return progressData;
+  }
+
+  // Existing methods...
+
+  public async getQuizDetailsByConcept(conceptName: string, learnerId: number) {
+    const quizzes = await this.prisma.quiz.findMany({
+      where: {
+        concept: {
+          name: conceptName,
+        },
+      },
+      include: {
+        questions: {
+          include: {
+            propositions: true,
+          },
+        },
+      },
+    });
+  
+    const quizDetails = await Promise.all(quizzes.map(async (quiz) => {
+      const questions = await Promise.all(quiz.questions.map(async (question) => {
+        const learnerAnswer = await this.prisma.learnerAnswer.findFirst({
+          where: {
+            questionId: question.id,
+            learnerId: learnerId,
+          },
+          include: {
+            proposition: true,
+          },
+        });
+  
+        const correctAnswer = await this.prisma.answer.findFirst({
+          where: {
+            questionId: question.id,
+          },
+        });
+  
+        return {
+          question: question.libelle,
+          propositions: question.propositions.map(p => ({
+            id: p.id,
+            valeur: p.valeur,
+          })),
+          learnerAnswer: learnerAnswer ? learnerAnswer.proposition.valeur : null,
+          correctAnswer: correctAnswer ? correctAnswer.valeur : null,
+          isCorrect: learnerAnswer ? learnerAnswer.proposition.numbQuestion === correctAnswer?.valeur : false,
+        };
+      }));
+  
+      return {
+        quizId: quiz.id,
+        questions,
+      };
+    }));
+  
+    return quizDetails;
+  }
+  
+  public async getAllQuizDetails(learnerId: number) {
+    const learner = await this.prisma.learner.findUnique({
+      where: { id: learnerId },
+      include: {
+        user: true,
+        classe: {
+          include: {
+            ecole: true,
+          },
+        },
+      },
+    });
+
+    if (!learner) {
+      throw new HttpException(404, 'Learner not found');
+    }
+
+    const learnerQuizzes = await this.prisma.learnerAnswer.findMany({
+      where: { learnerId },
+      select: { quizId: true },
+      distinct: ['quizId'],
+    });
+
+    const quizScores = await Promise.all(
+      learnerQuizzes.map(async (quiz) => {
+        const scorePercentage = await this.calculateLearnerScore(learnerId, quiz.quizId);
+        return { quizId: quiz.quizId, scorePercentage };
+      })
+    );
+
+    const evaluations: any[] = [];
+    const conceptScores: Record<number, ConceptScore> = {};
+    for (const { quizId } of learnerQuizzes) {
+      const quiz = await this.prisma.quiz.findUnique({
+        where: { id: quizId },
+        include: {
+          concept: {
+            include: {
+              session: {
+                include: {
+                  syllabus: {
+                    include: {
+                      teacher: {
+                        include: { user: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (quiz && quiz.concept) {
+        const conceptId = quiz.concept.id;
+        const session = quiz.concept.session;
+        if (!conceptScores[conceptId]) {
+          conceptScores[conceptId] = {
+            score: 0,
+            totalQuestions: 0,
+            sessionId: session.id,
+            conceptName: quiz.concept.name,
+            sessionName: session.name,
+          };
+        }
+        conceptScores[conceptId].score += quizScores.find((qs) => qs.quizId === quizId)?.scorePercentage || 0;
+        conceptScores[conceptId].totalQuestions += 1;
+      }
+    }
+
+    const sessionScores: Record<number, SessionScore> = {};
+    for (const conceptId in conceptScores) {
+      const concept = conceptScores[conceptId];
+      if (!sessionScores[concept.sessionId]) {
+        sessionScores[concept.sessionId] = {
+          score: 0,
+          totalConcepts: 0,
+          sessionName: concept.sessionName,
+        };
+      }
+      sessionScores[concept.sessionId].score += (concept.score / concept.totalQuestions);
+      sessionScores[concept.sessionId].totalConcepts += 1;
+    }
+
+    for (const sessionId in sessionScores) {
+      sessionScores[sessionId].scorePercentage = (sessionScores[sessionId].score / sessionScores[sessionId].totalConcepts);
+    }
+
+    for (const sessionId in sessionScores) {
+      const sessionConcepts = Object.values(conceptScores).filter(concept => concept.sessionId === parseInt(sessionId));
+      const detailleQuizz = await Promise.all(sessionConcepts.map(async (concept, index) => {
+        const quizDetails = await this.getQuizDetailsByConcept(concept.conceptName, learnerId);
+        return {
+          concept: concept.conceptName,
+          Questions: quizDetails,
+        };
+      }));
+
+      const sessionName = sessionScores[sessionId].sessionName;
+      const firstSessionConcept = sessionConcepts[0];
+      const syllabus = await this.prisma.syllabus.findUnique({
+        where: { id: firstSessionConcept.sessionId },
+        include: {
+          teacher: {
+            include: { user: true },
+          },
+        },
+      });
+
+      evaluations.push({
+        class: learner.classe,
+        school: learner.classe?.ecole,
+        detailleQuizz,
+        session: { id: sessionId, name: sessionName },
+        score: sessionScores[sessionId].scorePercentage,
+        syllabus: syllabus,
+        teacher: syllabus?.teacher?.user,
+      });
+    }
+
+    const response = {
+      learner,
+      evaluations,
+      quizScores,
+      sessionScores,
+      conceptScores,
+    };
+
+    return response;
+  }
+
+
+ 
   
 }

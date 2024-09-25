@@ -1,81 +1,78 @@
-// import { User } from '@prisma/client';
-// import bcrypt from 'bcrypt';
-// import request from 'supertest';
-// import App from '@/app';
-// import { CreateUserDto } from '@dtos/users.dto';
-// import AuthRoute from '@routes/auth.route';
-//
-// afterAll(async () => {
-//   await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
-// });
-//
-// describe('Testing Auth', () => {
-//   describe('[POST] /signup', () => {
-//     it('response should have the Create userData', async () => {
-//       const userData: CreateUserDto = {
-//         email: 'test@email.com',
-//         password: 'q1w2e3r4',
-//       };
-//
-//       const authRoute = new AuthRoute();
-//       const users = authRoute.authController.authService.users;
-//
-//       users.findUnique = jest.fn().mockReturnValue(null);
-//       users.create = jest.fn().mockReturnValue({
-//         id: 1,
-//         email: userData.email,
-//         password: await bcrypt.hash(userData.password, 10),
-//       });
-//
-//       const app = new App([authRoute]);
-//       return request(app.getServer()).post(`${authRoute.path}signup`).send(userData).expect(201);
-//     });
-//   });
-//
-//   describe('[POST] /login', () => {
-//     it('response should have the Set-Cookie header with the Authorization token', async () => {
-//       const userData: CreateUserDto = {
-//         email: 'test@email.com',
-//         password: 'q1w2e3r4',
-//       };
-//
-//       const authRoute = new AuthRoute();
-//       const users = authRoute.authController.authService.users;
-//
-//       users.findUnique = jest.fn().mockReturnValue({
-//         id: 1,
-//         email: userData.email,
-//         password: await bcrypt.hash(userData.password, 10),
-//       });
-//
-//       const app = new App([authRoute]);
-//       return request(app.getServer())
-//         .post(`${authRoute.path}login`)
-//         .send(userData)
-//         .expect('Set-Cookie', /^Authorization=.+/);
-//     });
-//   });
-//
-//   // describe('[POST] /logout', () => {
-//   //   it('logout Set-Cookie Authorization=; Max-age=0', async () => {
-//   //     const user: User = {
-//   //       id: 1,
-//   //       email: 'test@email.com',
-//   //       password: 'q1w2e3r4',
-//   //     };
-//
-//   //     const authRoute = new AuthRoute();
-//   //     const users = authRoute.authController.authService.users;
-//
-//   //     users.findFirst = jest.fn().mockReturnValue({
-//   //       ...user,
-//   //       password: await bcrypt.hash(user.password, 10),
-//   //     });
-//
-//   //     const app = new App([authRoute]);
-//   //     return request(app.getServer())
-//   //       .post(`${authRoute.path}logout`)
-//   //       .expect('Set-Cookie', /^Authorization=\;/);
-//   //   });
-//   // });
-// });
+import { AuthService } from '../services/auth.service';
+import PrismaService from '../services/prisma.service';
+import { HttpException } from '@exceptions/HttpException';
+import { hash } from 'bcrypt';
+import { v4 as uuid } from 'uuid';
+import { EmailService } from '@services/email.service';
+import { Container } from 'typedi';
+import { compare } from 'bcrypt';
+import bcrypt from 'bcrypt';
+
+jest.mock('../services/prisma.service');
+jest.mock('bcrypt', () => ({
+  hash: jest.fn(),
+}));
+jest.mock('uuid', () => ({
+  v4: jest.fn(),
+}));
+jest.mock('@services/email.service');
+jest.mock('bcrypt', () => ({
+    compare: jest.fn(), // Moquer explicitement la méthode `compare`
+  }));
+
+  describe('AuthService - loginTeacher', () => {
+    let authService: AuthService;
+    let prismaMock: any;
+    let emailServiceMock: any;
+  
+    beforeEach(() => {
+      // Créer un mock pour PrismaService
+      prismaMock = {
+        user: {
+          findUnique: jest.fn(),
+        },
+      };
+  
+      // Créer un mock pour EmailService
+      emailServiceMock = {
+        sendMailForConnection: jest.fn(),
+      };
+  
+      // Injecter le mock d'EmailService avec typedi
+      Container.set(EmailService, emailServiceMock);
+  
+      // Injecter le mock de PrismaService
+      jest.spyOn(PrismaService, 'getInstance').mockReturnValue(prismaMock);
+  
+      // Créer une nouvelle instance de AuthService
+      authService = new AuthService();
+    });
+  
+    afterEach(() => {
+      jest.clearAllMocks();
+      Container.reset(); // Réinitialiser Container après chaque test
+    });
+  
+    it('should return a user and token data on successful login', async () => {
+      const userData = { email: 'test@example.com', password: 'password' };
+  
+      prismaMock.user.findUnique.mockResolvedValue({
+        id: 1,
+        email: 'test@example.com',
+        password: 'hashedPassword',
+      });
+  
+      // Simuler le succès de la comparaison du mot de passe
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+  
+      const result = await authService.loginTeacher(userData);
+  
+      expect(result.findUser).toEqual({
+        id: 1,
+        email: 'test@example.com',
+        password: 'hashedPassword',
+      });
+      expect(result.tokenData).toHaveProperty('token');
+    });
+  });
+  

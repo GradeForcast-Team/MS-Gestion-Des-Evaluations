@@ -54,13 +54,13 @@ export class App {
       logger.info(`🚀 App listening on the port ${this.port}`);
       logger.info(`=================================`);
        // Démarrer le client Eureka
-    eurekaClient.start((error) => {
-      if (error) {
-        logger.error('Erreur lors du démarrage de Eureka client', error);
-      } else {
-        logger.info('Eureka client started successfully');
-      }
-    });
+    // eurekaClient.start((error) => {
+    //   if (error) {
+    //     logger.error('Erreur lors du démarrage de Eureka client', error);
+    //   } else {
+    //     logger.info('Eureka client started successfully');
+    //   }
+    // });
   });
   }
 

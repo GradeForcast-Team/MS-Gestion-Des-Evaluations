@@ -16,7 +16,10 @@ export class QuizzRoute implements Routes {
   private initializeRoutes() {
     this.router.post(`${this.path}/create`, this.quizz.createQuizz);
     this.router.get(`${this.path}/all`, this.quizz.getAllQuizzForConcept);
+    this.router.get(`${this.path}/getAllQuizzForTeacher/:teacherId`, this.quizz.getAllQuizzForTeacher);
+    this.router.get(`${this.path}/getQuizDetails/:quizzId`, this.quizz.getQuizDetails);
     this.router.put(`${this.path}/update`, this.quizz.updateQuizzForConcept);
+    this.router.put(`${this.path}/updateQuizz/:quizzId`, this.quizz.updateQuizzData);
     this.router.get(`${this.path}/calculate`, this.quizz.calculerNoteLearner);
     this.router.delete(`${this.path}/delete`, this.quizz.deleteQuizz);
    
