@@ -18,30 +18,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repositories
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18.16.1
+          node-version: 18
 
-      - name: Install dependencies
+      - name: Build and Push Docker Image
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
-          npm install
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker build -t elohim237/repoevaluation:latest .
+          docker push elohim237/repoevaluation:latest
+          tar -czf "${GITHUB_SHA}".tar.gz --exclude=*.git --exclude=node_modules *
 
-      - name: Build Docker image
-        run: docker build -t elohim237/repoevaluation:latest .
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Store artefact for distribution
+        uses: actions/upload-artifact@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Docker image
-        run: docker push elohim237/repoevaluation:latest
-
+          name: app-build
+          path: ${{ github.sha }}.tar.gz
+          
   unit-test:
     runs-on: ubuntu-latest
     needs: build
@@ -62,10 +61,35 @@ jobs:
   deploy:
     name: Deploy to production server
     runs-on: ubuntu-latest
-    needs: unit-test
-
+    needs: unit-test  # Corrected job dependency name
     steps:
-      - name: SSH into the server and deploy using Docker
+      - name: Download deployment artefact
+        uses: actions/download-artifact@v3
+        with:
+          name: app-build
+
+      - name: Create artifact directory
+        run: mkdir -p artifact
+
+      - name: Extract files
+        run: tar -xzf ${{ github.sha }}.tar.gz -C .
+
+      - name: Drop zip and tar files
+        run: rm ${{ github.sha }}.tar.gz
+
+      - name: Copy file via ssh password
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          password: ${{ secrets.DEPLOY_PASSWORD }}
+          port: ${{ secrets.DEPLOY_PORT }}
+          source: .
+          target: ${{ secrets.DEPLOY_PATH }}
+          overwrite: true
+          debug: true
+
+      - name: SSH into the server and deploy with Docker Compose
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST_PROD }}
@@ -73,17 +97,10 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD_PROD }}
           port: 22
           script: |
-            # Aller dans le répertoire de l'application
             cd ${{ secrets.SSH_PATH_PROD }}
-
-            # Arrêter et supprimer le conteneur en cours d'exécution
-            docker stop evaluation || true
-            docker rm evaluation || true
-
-            # Télécharger la nouvelle image depuis Docker Hub
-            docker pull elohim237/repoevaluation:latest
-
-            # Créer un nouveau conteneur à partir de l'image
-            docker run -d --name evaluation -p 3001:3001 --env-file .env elohim237/repoevaluation:latest
+            docker-compose down
+            docker-compose pull app
+            docker-compose up -d
             # Vérifier que le conteneur est en cours d'exécution
             docker ps
+
