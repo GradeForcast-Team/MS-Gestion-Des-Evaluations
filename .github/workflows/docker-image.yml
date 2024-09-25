@@ -80,12 +80,12 @@ jobs:
       - name: Copy file via ssh password
         uses: appleboy/scp-action@master
         with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          password: ${{ secrets.DEPLOY_PASSWORD }}
-          port: ${{ secrets.DEPLOY_PORT }}
+          host: ${{ secrets.SSH_HOST_PROD }}
+          username: ${{ secrets.SSH_USER_PROD }}
+          password: ${{ secrets.SSH_PASSWORD_PROD }}
+          port: 22
           source: .
-          target: ${{ secrets.DEPLOY_PATH }}
+          target: ${{ secrets.SSH_PATH_PROD }}
           overwrite: true
           debug: true
 
