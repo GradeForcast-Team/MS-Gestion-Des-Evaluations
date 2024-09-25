@@ -4,6 +4,7 @@ services:
   backend:
     image: elohim237/repoevaluation:latest
     container_name: evaluation
+    dockerfile: Dockerfile.dev
     environment:
       DATABASE_URL: mysql://user:GradeForecast1@mysqlGrade:3306/bd_noteforecast
     depends_on:
