@@ -65,7 +65,7 @@ jobs:
     needs: unit-test
 
     steps:
-      - name: SSH into the server and deploy using Docker Compose
+      - name: SSH into the server and deploy using Docker
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST_PROD }}
@@ -75,12 +75,16 @@ jobs:
           script: |
             # Aller dans le répertoire de l'application
             cd ${{ secrets.SSH_PATH_PROD }}
-            
-            # Mettre à jour le fichier docker-compose pour pointer vers la nouvelle image
-             # sed -i 's|elohim237/repoevaluation:.*|elohim237/repoevaluation:${{ github.sha }}|g' docker-compose.yml
 
-            # Télécharger la nouvelle image Docker
-            docker-compose pull
+            # Arrêter et supprimer le conteneur en cours d'exécution
+            docker stop evaluation || true
+            docker rm evaluation || true
 
-            # Redémarrer les conteneurs avec Docker Compose
-            docker-compose down && docker-compose up -d
+            # Télécharger la nouvelle image depuis Docker Hub
+            docker pull elohim237/repoevaluation:${{ github.sha }}
+
+            # Créer un nouveau conteneur à partir de l'image
+            docker run -d --name evaluation -p 3001:3001 --env-file .env elohim237/repoevaluation:${{ github.sha }}
+
+            # Vérifier que le conteneur est en cours d'exécution
+            docker ps
