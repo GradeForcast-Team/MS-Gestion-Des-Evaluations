@@ -77,7 +77,7 @@ jobs:
             cd ${{ secrets.SSH_PATH_PROD }}
             
             # Mettre à jour le fichier docker-compose pour pointer vers la nouvelle image
-            sed -i 's|elohim237/repoevaluation:.*|elohim237/repoevaluation:${{ github.sha }}|g' docker-compose.yml
+             # sed -i 's|elohim237/repoevaluation:.*|elohim237/repoevaluation:${{ github.sha }}|g' docker-compose.yml
 
             # Télécharger la nouvelle image Docker
             docker-compose pull
