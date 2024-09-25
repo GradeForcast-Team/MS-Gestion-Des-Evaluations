@@ -1,25 +1,26 @@
 version: "3.9"
 
 services:
-  proxy:
-    container_name: proxy
+  backend:
     image: elohim237/repoevaluation:latest
+    container_name: evaluation
+    environment:
+      DATABASE_URL: mysql://user:GradeForecast1@mysqlGrade:3306/bd_noteforecast
+    depends_on:
+      - mysql
     ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    restart: unless-stopped
+      - "3001:3001"
     networks:
       - backend
 
   mysql:
     container_name: mysqlGrade
-    image: mysql:8.0  # Utilisation de l'image officielle de MySQL
+    image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: Grade   # Mot de passe root
-      MYSQL_DATABASE: bd_noteforecast  # Nom de la base de données
-      MYSQL_USER: user  # Nom de l'utilisateur MySQL
-      MYSQL_PASSWORD: GradeForecast1  # Mot de passe de l'utilisateur MySQL
+      MYSQL_ROOT_PASSWORD: Grade
+      MYSQL_DATABASE: bd_noteforecast
+      MYSQL_USER: user
+      MYSQL_PASSWORD: GradeForecast1
     ports:
       - "3306:3306"
     volumes:
@@ -27,17 +28,13 @@ services:
     networks:
       - backend
 
-  backend:
-    container_name: evaluation
-    build:
-      context: ./
-      dockerfile: Dockerfile.dev  # Utilise le Dockerfile de production pour le backend
-    environment:
-      DATABASE_URL: mysql://user:GradeForecast1@mysqlGrade:3306/bd_noteforecast # URL de connexion à MySQL
-    depends_on:
-      - mysql  # Assure que MySQL démarre avant le backend
+  proxy:
+    container_name: proxy
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - "3001:3001"  # Port d'exposition du backend
+      - "80:80"
     networks:
       - backend
 
