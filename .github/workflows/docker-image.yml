@@ -99,7 +99,7 @@ jobs:
           script: |
             cd ${{ secrets.SSH_PATH_PROD }}
             docker-compose down
-            docker-compose pull app
+            docker-compose pull proxy
             docker-compose up -d
             # Vérifier que le conteneur est en cours d'exécution
             docker ps
