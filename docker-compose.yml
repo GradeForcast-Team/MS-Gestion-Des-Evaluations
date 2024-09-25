@@ -3,7 +3,7 @@ version: "3.9"
 services:
   proxy:
     container_name: proxy
-    image: nginx:alpine
+    image: elohim237/repoevaluation:latest
     ports:
       - "80:80"
     volumes:
