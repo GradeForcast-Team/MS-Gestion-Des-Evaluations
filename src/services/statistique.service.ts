@@ -160,86 +160,102 @@ export class StatistiqueService {
         return sessionsArray;
       }
 
-public async calculateEvaluationAndAutoEvaluationGap(learnerId: number, syllabusId: number): Promise<number> {
-    console.log("Début du calcul de l'écart pour le learner:", learnerId, "et le syllabus:", syllabusId);
-  
-    // Étape 1: Récupérer et calculer les scores d'évaluation pour le syllabus
-    const learnerPerformance = await this.getLearnerPerformance(learnerId, syllabusId);
-    console.log("Performance de l'apprenant récupérée:", learnerPerformance);
-  
-    const autoEvaluationsData = await this.getLearnerAutoEvaluations(learnerId, syllabusId);
-    console.log("Auto-évaluations récupérées:", autoEvaluationsData);
-  
-    let totalEvaluationScore = 0;
-    let totalAutoEvaluationScore = 0;
-    let numberOfSessions = learnerPerformance.length;
-  
-    // Utilisation de la nouvelle fonction pour traiter les données de session
-    const processedSessions = this.processSessionData(learnerPerformance);
-    console.log("Sessions traitées:", processedSessions);
-  
-    for (const session of processedSessions) {
-      const autoSession = autoEvaluationsData.find(s => s.sessionId === session.sessionId);
-      console.log("Session actuelle:", session.sessionName, "Auto-session correspondante:", autoSession);
-  
-      let sessionEvaluationScore = 0;
-      let sessionAutoEvaluationScore = 0;
-      let numberOfConceptsInSession = session.concepts.length;
-  
-      for (const concept of session.concepts) {
-        console.log("Concept actuel:", concept.conceptName);
-        const quizzes = concept.quizzes;
-  
-        // Calculer la note de concept en pourcentage
-        let conceptScore = 0;
-        if (quizzes.length > 0) {
-          let totalQuizScore = 0;
-          for (const quiz of quizzes) {
-            const quizScore = await this.calculateLearnerScore(learnerId, quiz.quizId);
-            console.log("Score du quiz", quiz.quizName, ":", quizScore);
-            totalQuizScore += quizScore;
-          }
-          conceptScore = totalQuizScore / quizzes.length;
+      public async calculateEvaluationAndAutoEvaluationGap(learnerId: number, syllabusId: number): Promise<number> {
+        console.log("Début du calcul de l'écart pour le learner:", learnerId, "et le syllabus:", syllabusId);
+    
+        // Récupérer les scores d'évaluation et d'auto-évaluation
+        const learnerPerformance = await this.getLearnerPerformance(learnerId, syllabusId);
+        console.log("Performance de l'apprenant récupérée:", learnerPerformance);
+    
+        const autoEvaluationsData = await this.getLearnerAutoEvaluations(learnerId, syllabusId);
+        console.log("Auto-évaluations récupérées:", autoEvaluationsData);
+    
+        let totalEvaluationScore = 0;
+        let totalAutoEvaluationScore = 0;
+        let numberOfSessions = learnerPerformance.length;
+    
+        const processedSessions = this.processSessionData(learnerPerformance);
+        console.log("Sessions traitées:", processedSessions);
+    
+        for (const session of processedSessions) {
+            const autoSession = autoEvaluationsData.find(s => s.sessionId === session.sessionId);
+            console.log("Session actuelle:", session.sessionName, "Auto-session correspondante:", autoSession);
+    
+            let sessionEvaluationScore = 0;
+            let sessionAutoEvaluationScore = 0;
+            let numberOfConceptsInSession = session.concepts.length;
+            let validConceptsCount = 0; // Compter les concepts valides
+    
+            for (const concept of session.concepts) {
+                console.log("Concept actuel:", concept.conceptName);
+                const quizzes = concept.quizzes;
+    
+                let conceptScore = 0;
+                if (quizzes.length > 0) {
+                    let totalQuizScore = 0;
+                    let validQuizCount = 0; // Compter les quizzes valides
+    
+                    for (const quiz of quizzes) {
+                        const quizScore = await this.calculateLearnerScore(learnerId, quiz.quizId);
+                        console.log("Score du quiz", quiz.quizName, ":", quizScore);
+    
+                        if (!isNaN(quizScore)) {
+                            totalQuizScore += quizScore;
+                            validQuizCount++;
+                        }
+                    }
+    
+                    // Calculer le score du concept si des quizzes valides existent
+                    if (validQuizCount > 0) {
+                        conceptScore = totalQuizScore / validQuizCount;
+                        validConceptsCount++; // Incrémenter si un concept valide est trouvé
+                    }
+                }
+    
+                console.log("Score du concept calculé:", conceptScore);
+    
+                // Récupérer le score de l'auto-évaluation pour ce concept, converti en pourcentage
+                const autoConcept = autoSession?.concepts.find(c => c.conceptId === concept.conceptId);
+                const autoConceptScore = autoConcept?.score !== null && autoConcept?.score !== undefined 
+                    ? autoConcept.score * 100 
+                    : 0;
+                console.log("Score de l'auto-évaluation pour le concept (en pourcentage):", autoConceptScore);
+    
+                // Ajouter les scores aux totaux de la session
+                sessionEvaluationScore += conceptScore;
+                sessionAutoEvaluationScore += autoConceptScore;
+            }
+    
+            // Calculer les moyennes des sessions seulement si des concepts valides existent
+            if (validConceptsCount > 0) {
+                sessionEvaluationScore /= validConceptsCount;
+                sessionAutoEvaluationScore /= validConceptsCount;
+            }
+    
+            console.log("Score moyen de la session (évaluation):", sessionEvaluationScore);
+            console.log("Score moyen de la session (auto-évaluation en pourcentage):", sessionAutoEvaluationScore);
+    
+            // Ajouter les scores de la session aux totaux globaux
+            totalEvaluationScore += sessionEvaluationScore;
+            totalAutoEvaluationScore += sessionAutoEvaluationScore;
         }
-        console.log("Score du concept calculé:", conceptScore);
-        
-        // Récupérer le score de l'auto-évaluation pour ce concept, converti en pourcentage
-        const autoConcept = autoSession?.concepts.find(c => c.conceptId === concept.conceptId);
-        const autoConceptScore = autoConcept?.score !== null && autoConcept?.score !== undefined ? autoConcept.score * 100 : 0;
-        console.log("Score de l'auto-évaluation pour le concept (en pourcentage):", autoConceptScore);
-  
-        // Ajouter au score total de la session
-        sessionEvaluationScore += conceptScore;
-        sessionAutoEvaluationScore += autoConceptScore;
-      }
-  
-      // Calculer les moyennes pour chaque session
-      if (numberOfConceptsInSession > 0) {
-        sessionEvaluationScore /= numberOfConceptsInSession;
-        sessionAutoEvaluationScore /= numberOfConceptsInSession;
-      }
-      console.log("Score moyen de la session (évaluation):", sessionEvaluationScore);
-      console.log("Score moyen de la session (auto-évaluation en pourcentage):", sessionAutoEvaluationScore);
-  
-      // Ajouter au score total
-      totalEvaluationScore += sessionEvaluationScore;
-      totalAutoEvaluationScore += sessionAutoEvaluationScore;
+    
+        // Calculer les moyennes finales pour le syllabus si des sessions valides existent
+        if (numberOfSessions > 0) {
+            totalEvaluationScore /= numberOfSessions;
+            totalAutoEvaluationScore /= numberOfSessions;
+        }
+    
+        console.log("Score final du syllabus (évaluation):", totalEvaluationScore);
+        console.log("Score final du syllabus (auto-évaluation en pourcentage):", totalAutoEvaluationScore);
+    
+        // Calculer l'écart entre les scores d'évaluation et d'auto-évaluation
+        const ecart = totalEvaluationScore - totalAutoEvaluationScore;
+        console.log("Écart final:", ecart);
+    
+        return ecart;
     }
-  
-    // Calculer les moyennes finales pour le syllabus
-    if (numberOfSessions > 0) {
-      totalEvaluationScore /= numberOfSessions;
-      totalAutoEvaluationScore /= numberOfSessions;
-    }
-    console.log("Score final du syllabus (évaluation):", totalEvaluationScore);
-    console.log("Score final du syllabus (auto-évaluation en pourcentage):", totalAutoEvaluationScore);
-  
-    // Étape 2: Calculer l'écart entre la note d'évaluation et d'auto-évaluation
-    const ecart = totalEvaluationScore - totalAutoEvaluationScore;
-    console.log("Écart final:", ecart);
-  
-    return ecart;
-  }
+    
   
   // Méthode pour grouper les concepts par ID (mise à jour selon la structure actuelle des données)
   private processSessionData(sessions) {

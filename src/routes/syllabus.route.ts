@@ -17,6 +17,7 @@ export class SyllabusRoute implements Routes {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/create/:id(\\d+)`, this.syllabus.createSyllabus);
+    this.router.post(`${this.path}/assign`, this.syllabus.assignSyllabus);
     this.router.get(`${this.path}/generatepdf/:syllabusId(\\d+)/teacher/:teacherId(\\d+)`, this.syllabus.generatePdf);
     this.router.get(`${this.path}/getAllSyllabusForTeacher/:id(\\d+)`, this.syllabus.getAllSyllabusForTeacher);
     this.router.get(`${this.path}/getAllSyllabusForTeacher2/:id(\\d+)`, this.syllabus.getAllSyllabusForTeacher2);

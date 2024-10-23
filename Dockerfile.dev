@@ -15,10 +15,6 @@ RUN apt-get update -y && apt-get install -y openssl
 # Générez le client Prisma
 RUN npx prisma generate
 
-# Appliquez les migrations Prisma (lors de la construction de l'image)
-# Utilisez `npx prisma migrate deploy` pour appliquer les migrations dans un environnement de production
-
-
 ENV NODE_ENV production
 
 # Exposer le port sur lequel l'application s'exécute

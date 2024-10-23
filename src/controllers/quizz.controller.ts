@@ -98,4 +98,37 @@ export class QuizzController {
       next(error);
     }
   };
+
+  public assignQuizToClasses = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { conceptName, quizId, classIds,schoolId } = req.body;
+
+      // Appeler le service pour assigner le quiz aux classes
+      await this.quizzService.assignQuizToClasses(conceptName, quizId, classIds,schoolId);
+
+      // Retourner une réponse réussie
+      res.status(200).json({ message: `Quiz ${quizId} successfully assigned to classes.` });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getClassesAndConcepts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.teacherId);
+      if (isNaN(teacherId)) {
+       res.status(400).json({ message: 'Invalid teacher ID' });
+      }
+
+      const classesWithConcepts = await this.quizzService.getClassesAndConceptsForTeacher(teacherId);
+
+      res.status(200).json({ data: classesWithConcepts, message: 'Classes and concepts retrieved successfully' });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

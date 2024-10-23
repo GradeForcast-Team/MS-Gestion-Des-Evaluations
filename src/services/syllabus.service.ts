@@ -677,4 +677,20 @@ public async getSyllabusWithClassesForTeacher(teacherId: number): Promise<any[]>
   }
 }
 
+async  assignSyllabusToClasses(syllabusId, classIds) {
+  try {
+    for (const classId of classIds) {
+      await this.prisma.syllabusClasse.create({
+        data: {
+          syllabusId,
+          classeId: classId,
+          linkSyllabusClasse: `syllabus_${syllabusId}_classe_${classId}`
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Erreur lors de l\'assignation du syllabus:', error);
+    throw new Error('Erreur lors de l\'assignation du syllabus.');
+  }
+}
 }

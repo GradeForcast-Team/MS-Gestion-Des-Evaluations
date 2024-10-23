@@ -15,6 +15,7 @@ export class ConceptRoute implements Routes {
     this.router.post(`${this.path}/create`, this.conceptController.createConcept);
     this.router.get(`${this.path}/all`, this.conceptController.getAllConceptsForSession);
     this.router.get(`${this.path}/:teacherId`, this.conceptController.getTeacherData);
+    this.router.get(`${this.path}/search/:teacherId`, this.conceptController.searchConcept);
     this.router.get(`${this.path}`, this.conceptController.getConceptById);
     this.router.put(`${this.path}/update`, this.conceptController.updateConcept);
     this.router.delete(`${this.path}/delete`, this.conceptController.deleteConcept);

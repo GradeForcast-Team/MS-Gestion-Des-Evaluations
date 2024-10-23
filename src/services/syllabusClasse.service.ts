@@ -376,4 +376,44 @@ export class SyllabusClasseService {
       // Return the complete learner information
       return learner;
   }
+
+  // services/syllabusService.js
+
+
+ public async getLearnersBySyllabus(syllabusId:number) {
+    try {
+      // Chercher les classes associées au syllabus à partir de SyllabusClasse
+      const syllabusClasses = await this.prisma.syllabusClasse.findMany({
+        where: {
+          syllabusId: syllabusId
+        },
+        include: {
+          classe: {
+            include: {
+              learners: {
+                include: {
+                  user: true // Inclure les informations utilisateur des apprenants
+                }
+              }
+            }
+          }
+        }
+      });
+
+      if (!syllabusClasses || syllabusClasses.length === 0) {
+        throw new Error(`Aucune classe trouvée pour le syllabus avec l'ID ${syllabusId}`);
+      }
+
+      // Extraire tous les apprenants des classes trouvées
+      let learners = [];
+      syllabusClasses.forEach(syllabusClasse => {
+        learners = learners.concat(syllabusClasse.classe.learners);
+      });
+
+      return learners;
+    } catch (error) {
+      throw new Error(`Erreur lors de la récupération des apprenants: ${error.message}`);
+    }
+  }
 }
+

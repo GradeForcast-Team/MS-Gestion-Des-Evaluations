@@ -15,6 +15,8 @@ export class QuizzService {
   private concept = this.prisma.concept;
   private syllabus = this.prisma.syllabus;
   private session = this.prisma.session;
+  private syllabusClasse = this.prisma.syllabusClasse;
+  private classe = this.prisma.classe;
   public async createQuiz(conceptId: number, quizData: CreateQuizDto): Promise<Quiz> {
     const existingConcept = await this.concept.findFirst({ where: { id: conceptId } });
 
@@ -103,6 +105,7 @@ export class QuizzService {
 
   public async getQuizDetails(quizId: number) {
     try {
+      // Requête pour récupérer les détails du quiz avec les classes assignées
       const quiz = await this.prisma.quiz.findUnique({
         where: { id: quizId },
         include: {
@@ -113,6 +116,15 @@ export class QuizzService {
                   syllabus: {
                     include: {
                       teacher: true,
+                      syllabusClasse: {  // Ajout de la relation avec les classes
+                        include: {
+                          classe: {
+                            include: {
+                              ecole: true, // Inclusion de l'école associée
+                            },
+                          },
+                        },
+                      },
                     },
                   },
                 },
@@ -127,11 +139,20 @@ export class QuizzService {
           },
         },
       });
-
+  
       if (!quiz) {
         throw new HttpException(404, 'Quiz not found');
       }
-
+  
+      // Préparer les classes assignées
+      const assignedClasses = quiz.concept.session.syllabus.syllabusClasse.map(sc => ({
+        classeId: sc.classe.id,
+        classeName: sc.classe.name,
+        ecoleId: sc.classe.ecole?.id ?? null,
+        ecoleName: sc.classe.ecole?.name ?? null,
+      }));
+  
+      // Retourner les détails du quiz avec les classes assignées
       return {
         id: quiz.id,
         name: quiz.name,
@@ -162,13 +183,14 @@ export class QuizzService {
             valeur: answer.valeur,
           })),
         })),
+        assignedClasses, // Ajout des classes assignées
       };
     } catch (error) {
       console.error('Error retrieving quiz details:', error);
       throw new HttpException(500, 'Internal server error');
     }
   }
-
+  
   public async updateQuizzForConcept(conceptId: number, id: number, quizz: any): Promise<Quiz> {
     const existingConcept = await this.concept.findFirst({ where: { id: conceptId } });
 
@@ -350,7 +372,7 @@ public async getAllQuizzForTeacher(teacherId: number): Promise<any[]> {
   const syllabusWithQuizzes = await this.syllabus.findMany({
     where: { teacherId },
     select: {
-      session: {  // Corrected to 'session' based on schema
+      session: {
         select: {
           concept: {
             select: {
@@ -368,6 +390,22 @@ public async getAllQuizzForTeacher(teacherId: number): Promise<any[]> {
           },
         },
       },
+      syllabusClasse: {  // Inclusion de la relation avec les classes
+        select: {
+          classe: {
+            select: {
+              id: true,            // ID de la classe
+              name: true,          // Nom de la classe
+              ecole: {             // Inclusion de l'école liée
+                select: {
+                  id: true,        // ID de l'école
+                  name: true,      // Nom de l'école
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
@@ -376,13 +414,269 @@ public async getAllQuizzForTeacher(teacherId: number): Promise<any[]> {
     throw new HttpException(404, 'No quizzes found for this teacher');
   }
 
-  // Extraire les quiz des résultats imbriqués
-  const allQuizzes = syllabusWithQuizzes
-    .flatMap(syllabus => syllabus.session)  // Extract sessions from syllabus
-    .flatMap(session => session.concept)   // Extract concepts from sessions
-    .flatMap(concept => concept.quizzes);   // Extract quizzes from concepts
+  // Extraire les quiz et lier chaque quiz aux classes et écoles associées
+  const allQuizzes = syllabusWithQuizzes.flatMap(syllabus =>
+    syllabus.session.flatMap(session =>
+      session.concept.flatMap(concept =>
+        concept.quizzes.map(quiz => ({
+          quizId: quiz.id,
+          quizName: quiz.name,
+          questions: quiz.questions,
+          classes: syllabus.syllabusClasse.map(classeRelation => ({
+            classeId: classeRelation.classe.id,
+            classeName: classeRelation.classe.name,
+            ecoleId: classeRelation.classe.ecole?.id ?? null,
+            ecoleName: classeRelation.classe.ecole?.name ?? null,
+          })),
+        }))
+      )
+    )
+  );
 
   return allQuizzes;
+}
+
+public async assignQuizToClassesForSchool(
+  conceptId: number,
+  quizId: number,
+  classIds: number[],
+  schoolId: number
+): Promise<void> {
+  // Vérifier si le concept existe
+  const existingConcept = await this.concept.findUnique({
+    where: { id: conceptId },
+  });
+
+  if (!existingConcept) {
+    throw new HttpException(404, `Concept with ID ${conceptId} not found`);
+  }
+
+  // Vérifier si le quiz est associé au concept
+  const existingQuiz = await this.quizz.findFirst({
+    where: { id: quizId, conceptId },
+  });
+
+  if (!existingQuiz) {
+    throw new HttpException(
+      404,
+      `Quiz with ID ${quizId} not found for Concept ${conceptId}`
+    );
+  }
+
+  // Récupérer la session associée au concept
+  const session = await this.prisma.session.findUnique({
+    where: { id: existingConcept.sessionId },
+    include: { syllabus: true },
+  });
+
+  if (!session || !session.syllabus) {
+    throw new HttpException(
+      404,
+      'Syllabus not found for the session linked to the concept.'
+    );
+  }
+
+  // Récupérer les classes sélectionnées pour l'école donnée
+  const validClasses = await this.classe.findMany({
+    where: {
+      id: { in: classIds },
+      ecoleId: schoolId, // Vérifier que les classes appartiennent à l'école spécifiée
+    },
+    include: { ecole: true },
+  });
+
+  if (validClasses.length === 0) {
+    throw new HttpException(
+      404,
+      `No valid classes found for School with ID ${schoolId}`
+    );
+  }
+
+  // Préparer les relations à insérer dans syllabusClasse
+  const syllabusClasseData = validClasses.map((classe) => ({
+    syllabusId: session.syllabus.id, // Utiliser l'ID du syllabus récupéré
+    classeId: classe.id,
+    linkSyllabusClasse: `quiz_${quizId}_classe_${classe.id}`, // Générer un lien unique
+  }));
+
+  // Créer ou mettre à jour les relations entre le quiz et les classes
+  await this.syllabusClasse.createMany({
+    data: syllabusClasseData,
+    skipDuplicates: true, // Ignorer les doublons
+  });
+
+  console.log(
+    `Quiz with ID ${quizId} assigned to ${validClasses.length} classes for School with ID ${schoolId}.`
+  );
+}
+
+public async assignQuizToClasses(
+  conceptName: string, // Nom du concept
+  quizId: number,
+  classIds: number[],
+  schoolId: number
+): Promise<void> {
+  const failedAssignments: { classeId: number; ecoleId: number }[] = [];
+  const syllabusClasseData: Array<{
+    syllabusId: number;
+    classeId: number;
+    linkSyllabusClasse: string;
+  }> = [];
+
+  // 1. Récupérer les classes valides de l'école donnée
+  const validClasses = await this.prisma.classe.findMany({
+    where: {
+      id: { in: classIds },
+      ecoleId: schoolId,
+    },
+  });
+
+  if (validClasses.length === 0) {
+    throw new HttpException(
+      404,
+      `No valid classes found for School with ID ${schoolId}`
+    );
+  }
+
+  // 2. Traiter chaque classe individuellement
+  for (const classe of validClasses) {
+    try {
+      // Vérifier si le syllabus associé à la classe contient le concept demandé
+      const syllabusClasse = await this.prisma.syllabusClasse.findFirst({
+        where: {
+          classeId: classe.id,
+          syllabus: {
+            session: {
+              some: {
+                concept: {
+                  some: { name: conceptName }, // Utilisation du filtre relationnel correct
+                },
+              },
+            },
+          },
+        },
+        include: { syllabus: true },
+      });
+
+      if (!syllabusClasse) {
+        failedAssignments.push({ classeId: classe.id, ecoleId: schoolId });
+        continue; // Passer à la classe suivante
+      }
+
+      // Vérifier si le quiz est déjà assigné à cette classe
+      const alreadyAssigned = await this.prisma.syllabusClasse.findFirst({
+        where: {
+          syllabusId: syllabusClasse.syllabusId,
+          classeId: classe.id,
+          linkSyllabusClasse: `quiz_${quizId}_classe_${classe.id}`,
+        },
+      });
+
+      if (alreadyAssigned) {
+        console.log(
+          `Quiz with ID ${quizId} is already assigned to Class ${classe.id}. Skipping.`
+        );
+        continue;
+      }
+
+      // Ajouter l'assignation si elle est valide
+      syllabusClasseData.push({
+        syllabusId: syllabusClasse.syllabusId,
+        classeId: classe.id,
+        linkSyllabusClasse: `quiz_${quizId}_classe_${classe.id}`,
+      });
+    } catch (error) {
+      console.error(`Error processing class ${classe.id}:`, error);
+      failedAssignments.push({ classeId: classe.id, ecoleId: schoolId });
+    }
+  }
+
+  // 3. Créer les assignations pour les classes valides
+  if (syllabusClasseData.length > 0) {
+    await this.prisma.syllabusClasse.createMany({
+      data: syllabusClasseData,
+      skipDuplicates: true,
+    });
+
+    console.log(
+      `Quiz with ID ${quizId} assigned to ${syllabusClasseData.length} classes for School with ID ${schoolId}.`
+    );
+  }
+
+  // 4. Afficher les classes non traitées
+  if (failedAssignments.length > 0) {
+    console.log(
+      `The quiz could not be assigned to the following classes: ${failedAssignments
+        .map((c) => `Class ${c.classeId} of School ${c.ecoleId}`)
+        .join(', ')}.`
+    );
+  }
+}
+
+
+
+
+
+
+
+public async getClassesAndConceptsForTeacher(teacherId) {
+  try {
+    const teacherClasses = await this.prisma.teacherClasse.findMany({
+      where: { teacherId },
+      select: {
+        classe: {
+          select: {
+            id: true,
+            name: true,
+            syllabusClasse: {
+              select: {
+                syllabus: {
+                  select: {
+                    session: {
+                      select: {
+                        concept: {
+                          select: {
+                            id: true,
+                            name: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Traiter les données pour structurer la réponse
+    const classesWithConcepts = teacherClasses.map((teacherClasse) => {
+      const classe = teacherClasse.classe;
+
+      // Extraire les concepts de toutes les sessions
+      const concepts = classe.syllabusClasse.flatMap((syllabusClasse) =>
+        syllabusClasse.syllabus?.session.flatMap((session) =>
+          session.concept.map((concept) => ({
+            conceptId: concept.id,
+            conceptName: concept.name,
+          }))
+        ) || []
+      );
+
+      return {
+        classeId: classe.id,
+        classeName: classe.name,
+        concepts,
+      };
+    });
+
+    return classesWithConcepts;
+  } catch (error) {
+    console.error('Erreur lors de la récupération des classes et concepts:', error);
+    throw error;
+  }
 }
   
   

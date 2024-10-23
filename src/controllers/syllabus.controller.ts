@@ -89,6 +89,21 @@ export class SyllabusController {
     }
   };
 
+  public  assignSyllabus = async (req: Request, res: Response, next: NextFunction):Promise<void> => {
+    try {
+    const { syllabusId, classIds } = req.body;
+    if (!syllabusId || !classIds || classIds.length === 0) {
+      res.status(400).json({ error: 'Les paramètres syllabusId et classIds sont requis.' });
+    }
+      const assignSyllabus = await this.syllabusService.assignSyllabusToClasses(syllabusId,classIds)
+      res.status(200).json({ message: 'Syllabus assigné avec succès.' });
+    } catch (error) {
+      console.error('Erreur lors de l\'assignation:', error);
+      res.status(500).json({ error: 'Erreur lors de l\'assignation.' });
+    }
+  }
+
+
   // public deleteSyllabus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   //   try {
   //     const { syllabusId, teacherId } = req.params;

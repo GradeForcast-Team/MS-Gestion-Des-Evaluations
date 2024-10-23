@@ -298,7 +298,7 @@ model Session {
   id        Int      @id @default(autoincrement())
   syllabus  Syllabus @relation(fields: [syllabusId], references: [id], onDelete: Cascade)
   syllabusId Int
-  name      String  @unique
+  name      String  
   startDate DateTime
   endDate   DateTime
   sessionAutoAssessment SessionAutoAssessment[]
@@ -317,7 +317,7 @@ model Concept {
 
 model Quiz {
   id        Int       @id @default(autoincrement())
-  name      String    @unique
+  name      String    
   questions Question[]
   learnerAnswer LearnerAnswer[]
   isActive Boolean @default(true)

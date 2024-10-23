@@ -315,5 +315,27 @@ export class ClasseService {
       return  learners ;
     
   }
+  async  getTeacherClasses(teacherId) {
+    try {
+      const classes = await this.prisma.teacherClasse.findMany({
+        where: {
+          teacherId: teacherId, // Filtrer par l'ID de l'enseignant
+        },
+        include: {
+          classe: {
+            select: {
+              id: true,
+              name: true,
+              ecoleId: true, // Inclure l'ID de l'école associée
+            },
+          },
+        },
+      });
   
+      return classes;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des classes:', error);
+      throw new Error('Erreur lors de la récupération des classes');
+    }
+  }
 }

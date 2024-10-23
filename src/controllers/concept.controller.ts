@@ -49,6 +49,26 @@ export class Conceptcontroller {
     }
   };
 
+  public searchConcept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.teacherId);
+      const name  = String(req.query.name); // Récupérer le paramètre `name`
+
+      if (!name) {
+        res.status(400).json({ error: 'Le paramètre "name" est requis' });
+      }
+
+    const concept = await this.conceptService.searchConcepts(name,teacherId);
+    if (!concept) {
+      res.status(404).json({ error: `Aucun concept trouvé avec le nom "${name}"` });
+    }
+
+    res.status(200).json(concept);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public updateConcept = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const conceptId = Number(req.query.id);

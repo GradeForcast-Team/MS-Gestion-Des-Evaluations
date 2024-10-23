@@ -27,6 +27,17 @@ export class SyllabusClasseController {
     }
   };
 
+  public getLearnerBySyllabusClasse = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const syllabusId  = req.params.syllabusId;
+
+    try {
+      const learnerSyllabusClasse = await this.syllabusClasseService.getLearnersBySyllabus(Number(syllabusId));
+      res.status(200).json({ data: learnerSyllabusClasse });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public createSyllabusClasse = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const { syllabusId, classeId } = req.body;
 

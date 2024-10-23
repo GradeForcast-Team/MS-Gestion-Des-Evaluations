@@ -108,4 +108,14 @@ export class ClasseController {
       next(error);
     }
   };
+
+  public getTeacherClasse = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const teacherId = Number(req.params.teacherId);
+      const findclasseByTeacher = await this.classeService.getTeacherClasses(teacherId);
+      res.status(200).json({ data: findclasseByTeacher });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

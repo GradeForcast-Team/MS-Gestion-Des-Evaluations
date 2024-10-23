@@ -238,5 +238,42 @@ export class ConceptService {
     }
   }
 
+  public async searchConcepts(name: string, teacherId: number) {
+    try {
+      // Convertir le nom en minuscule pour une recherche insensible à la casse
+      const lowerCaseName = name.toLowerCase();
+      console.log(lowerCaseName);
+  
+      const concept = await this.prisma.concept.findFirst({
+        where: {
+          name: {
+            contains: lowerCaseName, // Recherche partielle insensible à la casse
+          },
+          session: {
+            syllabus: {
+              teacher: {
+                id: teacherId, // Filtrer par l'ID de l'enseignant
+              },
+            },
+          },
+        },
+        // Sélectionner uniquement l'id et le nom du concept
+        select: {
+          id: true,
+          name: true,
+        },
+      });
+  
+      if (!concept) {
+        throw new Error('Aucun concept trouvé pour cet enseignant avec le nom fourni');
+      }
+  
+      return concept; // Retourner uniquement l'id et le nom du concept
+    } catch (error) {
+      console.error('Erreur lors de la recherche du concept:', error);
+      throw new Error('Erreur lors de la recherche du concept');
+    }
+  }
+  
   
 }
